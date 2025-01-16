@@ -1,0 +1,381 @@
+import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:monitoring_kambing/app/global_component/custom_button.dart';
+import 'package:monitoring_kambing/app/global_component/custom_datatable.dart';
+import 'package:monitoring_kambing/app/global_component/custom_dropdown.dart';
+import 'package:monitoring_kambing/app/global_component/custom_linechart.dart';
+import 'package:monitoring_kambing/app/global_component/custom_pagination.dart';
+import 'package:monitoring_kambing/app/global_component/datefield_analytic.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../controllers/aht_controller.dart';
+
+class IndeksLingkunganView extends GetView<IndeksLingkunganController> {
+  @override
+  final IndeksLingkunganController controller =
+      Get.put(IndeksLingkunganController());
+
+  IndeksLingkunganView({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Color.fromARGB(255, 78, 79, 79),
+        title: Text(
+          "Indeks Lingkungan",
+          style: GoogleFonts.ramabhadra(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Container(
+              color: Color(0xFFD9D9D9), // Set background color here
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: <Widget>[
+                          CustomDropdown(
+                            selectedValue: controller.selectedSheep,
+                            onChanged: (value) {
+                              controller.handlerDropdownSheep(value);
+                            },
+                            items: controller.sheepList,
+                            hintText: 'Pilih Domba',
+                          ),
+                          const SizedBox(width: 10), // Add spacing
+                          CustomDropdown(
+                            selectedValue: controller.selectedTimeRange,
+                            onChanged: (value) {
+                              controller.handlerDropdownTimeRange(value);
+                              if (value == 'Per-Hari') {
+                                controller.fetchDailyData(
+                                    controller.selectedDate.value!);
+                              } else if (value == 'Per-Minggu') {
+                                controller.fetchWeeklyData(
+                                    controller.selectedDate.value!);
+                              } else if (value == 'Per-Bulan') {
+                                controller.fetchMonthlyData(
+                                    controller.selectedDate.value!);
+                              }
+                            },
+                            items: ['Per-Hari', 'Per-Minggu', 'Per-Bulan'].obs,
+                            hintText: 'Atur Waktu',
+                            isMap: false, // Specify that items are not maps
+                          ),
+                          const SizedBox(width: 10), // Add spacing
+                          CustomDateFieldDomba(
+                            hintText: "Pilih Tanggal",
+                            controller: controller.tanggalLahirController,
+                            onDateSelected: (date) {
+                              controller.updateSelectedDate(date);
+                            },
+                            isEnabled: true,
+                            width: 150,
+                            height: 30,
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          CustomButton(
+                            onPressed: () {
+                              controller.resetState();
+                            },
+                            text: "Refresh Data",
+                            bgColor: Color.fromARGB(255, 10, 182, 0),
+                            fgColor: Colors.white,
+                            textColor: Colors.white,
+                            width: 120,
+                            height: 40,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          SizedBox(
+                            width: 10,
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.refresh),
+                            color: Color.fromARGB(255, 10, 182, 0),
+                            iconSize: 30,
+                            onPressed: () {
+                              controller.fetchIndeksData();
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Obx(() {
+                    if (controller.selectedSheep.value != null &&
+                        controller.selectedTimeRange.value != null &&
+                        controller.selectedDate.value != null) {
+                      if (controller.dataList.isEmpty) {
+                        return const Center(
+                          child: Text(
+                            'Isi data terlebih dahulu',
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.red,
+                            ),
+                          ),
+                        );
+                      } else {
+                        return Column(
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8.0),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color.fromARGB(
+                                                  255, 255, 255, 255)
+                                              .withOpacity(0.8),
+                                          spreadRadius: 1.5,
+                                          blurRadius: 2,
+                                          offset: Offset(0, 5),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Text(
+                                          'Grafik Suhu',
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          height: 10,
+                                        ),
+                                        Obx(() {
+                                          return CustomLineChart(
+                                            dataList: controller.dataList,
+                                            dataType: controller
+                                                        .selectedTimeRange
+                                                        .value ==
+                                                    'Per-Bulan'
+                                                ? 'suhu'
+                                                : controller.selectedTimeRange
+                                                            .value ==
+                                                        'Per-Minggu'
+                                                    ? 'suhu'
+                                                    : 'suhu',
+                                          );
+                                        }),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(
+                                    width:
+                                        10), // Add spacing between the charts
+                                Flexible(
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8.0),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color.fromARGB(
+                                                  255, 255, 255, 255)
+                                              .withOpacity(0.8),
+                                          spreadRadius: 1.5,
+                                          blurRadius: 2,
+                                          offset: Offset(0, 5),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Text(
+                                          'Grafik Kelembaban',
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          height: 10,
+                                        ),
+                                        Obx(() {
+                                          return CustomLineChart(
+                                            dataList: controller.dataList,
+                                            dataType: controller
+                                                        .selectedTimeRange
+                                                        .value ==
+                                                    'Per-Bulan'
+                                                ? 'kelembapan'
+                                                : controller.selectedTimeRange
+                                                            .value ==
+                                                        'Per-Minggu'
+                                                    ? 'kelembapan'
+                                                    : 'kelembapan',
+                                          );
+                                        }),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            Text(
+                              'Data for ${DateFormat('yyyy-MM-dd').format(controller.selectedDate.value!)}',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+                    } else {
+                      return const Center(
+                        child: Text(
+                          'Pilih domba, waktu, dan tanggal untuk menampilkan grafik',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Color.fromARGB(255, 29, 29, 29),
+                          ),
+                        ),
+                      );
+                    }
+                  }),
+                  const SizedBox(height: 10),
+                  Obx(() {
+                    if (controller.listDataTable.isNotEmpty) {
+                      return Column(
+                        children: [
+                          CustomPagination(
+                            currentPage: controller.currentPage,
+                            totalPage: controller.totalPage,
+                            onPrevious: controller.currentPage > 1
+                                ? () {
+                                    controller.fetchDataTable(
+                                        controller.currentPage - 1);
+                                  }
+                                : null,
+                            onNext:
+                                controller.currentPage < controller.totalPage
+                                    ? () {
+                                        controller.fetchDataTable(
+                                            controller.currentPage + 1);
+                                      }
+                                    : null,
+                          ),
+                          const SizedBox(height: 20),
+                          CustomDataTable(
+                            columnHeaders: controller.listColumnTable,
+                            dataList: controller.listDataTable,
+                          ),
+                        ],
+                      );
+                    } else {
+                      return const CircularProgressIndicator();
+                    }
+                  }),
+                ],
+              ),
+            ),
+            Container(
+              width: double.infinity,
+              color: const Color.fromARGB(255, 240, 237, 237),
+              padding: const EdgeInsets.symmetric(
+                  vertical: 35, horizontal: 1), // Adjusted padding
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Center(
+                    child: Image.asset(
+                      'assets/images/logo_keren.png',
+                      fit: BoxFit.contain,
+                      height: 50,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    "Jl. Telekomunikasi No.1, Sukapura, Kec. ",
+                    style: GoogleFonts.openSans(
+                      color: const Color.fromARGB(255, 0, 0, 0),
+                      fontSize: 14,
+                    ),
+                  ),
+                  Text(
+                    "Dayeuhkolot, Kabupaten Bandung, Jawa Barat 40257",
+                    style: GoogleFonts.openSans(
+                      color: const Color.fromARGB(255, 0, 0, 0),
+                      fontSize: 14,
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: FaIcon(FontAwesomeIcons.youtube),
+                        onPressed: () async {
+                          const url = 'https://www.youtube.com/@stas_rg';
+                          if (await canLaunchUrl(Uri.parse(url))) {
+                            await launchUrl(Uri.parse(url));
+                          } else {
+                            throw 'Could not launch $url';
+                          }
+                        },
+                      ),
+                      IconButton(
+                        icon: FaIcon(FontAwesomeIcons.instagram),
+                        onPressed: () async {
+                          const url = 'https://www.instagram.com/stas.rg/';
+                          if (await canLaunchUrl(Uri.parse(url))) {
+                            await launchUrl(Uri.parse(url));
+                          } else {
+                            throw 'Could not launch $url';
+                          }
+                        },
+                      ),
+                      IconButton(
+                        icon: FaIcon(FontAwesomeIcons.globe),
+                        onPressed: () async {
+                          const url =
+                              'https://tuvv.telkomuniversity.ac.id/stas-rg/';
+                          if (await canLaunchUrl(Uri.parse(url))) {
+                            await launchUrl(Uri.parse(url));
+                          } else {
+                            throw 'Could not launch $url';
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

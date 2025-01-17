@@ -66,7 +66,7 @@ class OverviewController extends GetxController {
 
       while (true) {
         final response = await _http.get(
-          'http://localhost:3000/api/v2/chip',
+          'https://modernfarming.vercel.app/api/v2/chip',
           query: {'page': page.toString()},
         );
 
@@ -99,7 +99,8 @@ class OverviewController extends GetxController {
 
   void fetchListDomba() async {
     try {
-      final response = await _http.get('http://localhost:3000/api/v2/chip');
+      final response =
+          await _http.get('https://modernfarming.vercel.app/api/v2/chip');
       if (response.statusCode == 200) {
         final data = response.body['data']['rows'];
         final Set<String> seenChipIds = {};
@@ -128,7 +129,7 @@ class OverviewController extends GetxController {
     isLoading(true);
     try {
       final response = await _http.get(
-        "http://localhost:3000/api/v2/chip/$chipId",
+        "https://modernfarming.vercel.app/api/v2/chip/$chipId",
       );
       if (response.statusCode == 200) {
         print("Response data: ${response.body}"); // Add this line

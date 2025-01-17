@@ -88,7 +88,7 @@ class WeightFoodController extends GetxController {
 
       while (true) {
         final response = await _http.get(
-          'http://localhost:3000/api/v2/chip',
+          'https://modernfarming.vercel.app/api/v2/chip',
           query: {'page': page.toString()},
         );
 
@@ -127,7 +127,7 @@ class WeightFoodController extends GetxController {
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
       final String url =
-          'http://localhost:3000/api/v2/loadcellpakan/daily/$formattedDate/$chipId';
+          'https://modernfarming.vercel.app/api/v2/loadcellpakan/daily/$formattedDate/$chipId';
       print(url);
       final response = await _http.get(url);
 
@@ -185,7 +185,7 @@ class WeightFoodController extends GetxController {
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
       final String url =
-          'http://localhost:3000/api/v2/loadcellpakan/weekly/$formattedDate/$chipId';
+          'https://modernfarming.vercel.app/api/v2/loadcellpakan/weekly/$formattedDate/$chipId';
       print(url);
       final response = await _http.get(url);
 
@@ -237,7 +237,7 @@ class WeightFoodController extends GetxController {
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
       final String url =
-          'http://localhost:3000/api/v2/loadcellpakan/monthly/$formattedDate/$chipId';
+          'https://modernfarming.vercel.app/api/v2/loadcellpakan/monthly/$formattedDate/$chipId';
       print(url);
       final response = await _http.get(url);
 
@@ -306,7 +306,8 @@ class WeightFoodController extends GetxController {
 
   void fetchListDomba() async {
     try {
-      final response = await _http.get('http://localhost:3000/api/v2/chip');
+      final response =
+          await _http.get('https://modernfarming.vercel.app/api/v2/chip');
       if (response.statusCode == 200) {
         final data = response.body['data']['rows'];
         final Set<String> seenChipIds = {};
@@ -334,7 +335,7 @@ class WeightFoodController extends GetxController {
   void fetchDataTable(int page) async {
     try {
       final response = await _http.get(
-          'http://localhost:3000/api/v2/loadcellpakan',
+          'https://modernfarming.vercel.app/api/v2/loadcellpakan',
           query: {'page': page.toString()});
       if (response.statusCode == 200) {
         final data = response.body['data']['rows'];

@@ -88,7 +88,7 @@ class LoadcellController extends GetxController {
 
       while (true) {
         final response = await _http.get(
-          'http://localhost:3000/api/v2/chip',
+          'https://modernfarming.vercel.app/api/v2/chip',
           query: {'page': page.toString()},
         );
 
@@ -127,7 +127,7 @@ class LoadcellController extends GetxController {
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
       final String url =
-          'http://localhost:3000/api/v2/loadcellbadan/daily/$formattedDate/$chipId';
+          'https://modernfarming.vercel.app/api/v2/loadcellbadan/daily/$formattedDate/$chipId';
       final response = await _http.get(url);
 
       if (response.statusCode == 200) {
@@ -177,7 +177,7 @@ class LoadcellController extends GetxController {
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
       final String url =
-          'http://localhost:3000/api/v2/loadcellbadan/weekly/$formattedDate/$chipId';
+          'https://modernfarming.vercel.app/api/v2/loadcellbadan/weekly/$formattedDate/$chipId';
       final response = await _http.get(url);
 
       if (response.statusCode == 200) {
@@ -221,7 +221,7 @@ class LoadcellController extends GetxController {
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
       final String url =
-          'http://localhost:3000/api/v2/loadcellbadan/monthly/$formattedDate/$chipId';
+          'https://modernfarming.vercel.app/api/v2/loadcellbadan/monthly/$formattedDate/$chipId';
       final response = await _http.get(url);
 
       if (response.statusCode == 200) {
@@ -282,7 +282,8 @@ class LoadcellController extends GetxController {
   void fetchListDomba() async {
     print('Jumlah domba sebelum fetch: ${sheepList.length}');
     try {
-      final response = await _http.get('http://localhost:3000/api/v2/chip');
+      final response =
+          await _http.get('https://modernfarming.vercel.app/api/v2/chip');
       if (response.statusCode == 200) {
         final data = response.body['data']['rows'];
         final Set<String> seenChipIds = {};
@@ -311,7 +312,7 @@ class LoadcellController extends GetxController {
   void fetchDataTable(int page) async {
     try {
       final response = await _http.get(
-          'http://localhost:3000/api/v2/loadcellbadan',
+          'https://modernfarming.vercel.app/api/v2/loadcellbadan',
           query: {'page': page.toString()});
       if (response.statusCode == 200) {
         final data = response.body['data']['rows'];

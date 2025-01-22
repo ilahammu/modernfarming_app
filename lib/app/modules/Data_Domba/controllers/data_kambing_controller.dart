@@ -69,6 +69,9 @@ class DataKambingController extends GetxController {
         },
       );
 
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
       if (response.statusCode == 200) {
         Get.defaultDialog(
           title: "Success",
@@ -81,9 +84,11 @@ class DataKambingController extends GetxController {
           },
         );
       } else {
+        print('Failed to post data: ${response.body}');
         throw Exception('Failed to post data');
       }
     } catch (e) {
+      print('Error posting data: $e');
       throw Exception('Failed to post data');
     }
   }

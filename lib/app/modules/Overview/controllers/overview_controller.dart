@@ -70,30 +70,33 @@ class OverviewController extends GetxController {
           query: {'page': page.toString()},
         );
 
-        if (response.statusCode == 200) {
+        if (response.statusCode == 200 && response.body != null) {
           final data = response.body['data']['rows'];
-          for (var item in data) {
-            final chipId = item['id'].toString();
-            if (!seenChipIds.contains(chipId)) {
-              seenChipIds.add(chipId);
-              allSheep.add({
-                'nama_domba': item['nama_domba'].toString(),
-                'chip_id': chipId,
-              });
+          if (data != null && data is List) {
+            for (var item in data) {
+              final chipId = item['chip_id']?.toString() ?? '';
+              if (chipId.isNotEmpty && !seenChipIds.contains(chipId)) {
+                seenChipIds.add(chipId);
+                allSheep.add({
+                  'nama_domba': item['nama_domba']?.toString() ?? 'Unknown',
+                  'chip_id': chipId,
+                });
+              }
             }
           }
 
-          final totalPages = response.body['pagination']['totalPages'];
+          final totalPages = response.body['pagination']?['totalPages'] ?? 1;
           if (page >= totalPages) break;
           page++;
         } else {
-          throw Exception('Failed to load sheep data');
+          throw Exception('Failed to load sheep data: ${response.statusText}');
         }
       }
 
       sheepList.value = allSheep;
+      print("Sheep list loaded successfully: $sheepList");
     } catch (e) {
-      throw Exception('Failed to fetch sheep data: $e');
+      print('Failed to fetch sheep data: $e');
     }
   }
 
@@ -131,21 +134,19 @@ class OverviewController extends GetxController {
       final response = await _http.get(
         "https://modernfarming-api.vercel.app/api/chip/$chipId",
       );
-      if (response.statusCode == 200) {
-        print("Response data: ${response.body}"); // Add this line
-        final data =
-            response.body != null ? DombaModels.fromJson(response.body) : null;
-        if (data != null && data.data.isNotEmpty) {
-          dataList.value = data.data;
-          // ignore: invalid_use_of_protected_member
-          print(data); // Add this line
+
+      if (response.statusCode == 200 && response.body != null) {
+        final data = response.body['data'];
+        if (data != null) {
+          final domba = DombaModels.fromJson(response.body);
+          dataList.value = domba.data;
+          print("Data successfully fetched: $dataList");
         } else {
           dataList.value = [];
-          print("No data available");
+          print("No data available for chip ID: $chipId");
         }
-        print("Data list: $dataList");
       } else {
-        throw Exception("Failed to fetch data");
+        throw Exception("Failed to fetch data: ${response.statusText}");
       }
     } catch (e) {
       print("Error fetching data: $e");

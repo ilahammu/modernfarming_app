@@ -5,12 +5,13 @@ class DombaModels {
 
   factory DombaModels.fromJson(Map<String, dynamic> json) {
     var dataList = <Baris>[];
-    if (json['data'] is Map<String, dynamic>) {
-      dataList.add(Baris.fromJson(json['data']));
-    } else if (json['data'] is List) {
-      dataList = (json['data'] as List<dynamic>)
-          .map((i) => Baris.fromJson(i as Map<String, dynamic>))
-          .toList();
+    if (json['data'] != null) {
+      if (json['data'] is List) {
+        dataList =
+            (json['data'] as List).map((item) => Baris.fromJson(item)).toList();
+      } else if (json['data'] is Map<String, dynamic>) {
+        dataList.add(Baris.fromJson(json['data']));
+      }
     }
     return DombaModels(data: dataList);
   }
@@ -46,7 +47,6 @@ class Baris {
   });
 
   factory Baris.fromJson(Map<String, dynamic> json) {
-    print('Parsing Baris from JSON: $json'); // Add this line
     return Baris(
       id: json['id'] ?? '',
       namaDomba: json['nama_domba'] ?? '',
@@ -54,24 +54,22 @@ class Baris {
       jenisKelamin: json['jenis_kelamin'] ?? '',
       createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toString()),
       updatedAt: DateTime.parse(json['updatedAt'] ?? DateTime.now().toString()),
-      berat: (json['berat'] != null)
+      berat: json['berat'] != null
           ? double.tryParse(json['berat'].toString())
           : null,
-      beratPakan: (json['berat_pakan'] != null)
+      beratPakan: json['berat_pakan'] != null
           ? double.tryParse(json['berat_pakan'].toString())
           : null,
-      suhu: (json['suhu'] != null)
+      suhu: json['suhu'] != null
           ? double.tryParse(json['suhu'].toString())
           : null,
-      kelembapan: (json['kelembapan'] != null)
+      kelembapan: json['kelembapan'] != null
           ? double.tryParse(json['kelembapan'].toString())
           : null,
-      tinggi: (json['tinggi'] != null)
+      tinggi: json['tinggi'] != null
           ? double.tryParse(json['tinggi'].toString())
           : null,
-      kondisi: json['kondisi'] == 1 ||
-          json['kondisi'] ==
-              true, // Convert 1/true to true and 0/false to false
+      kondisi: json['kondisi'] == 1 || json['kondisi'] == true,
     );
   }
 }

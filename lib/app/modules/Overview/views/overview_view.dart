@@ -57,11 +57,14 @@ class OverviewView extends GetView<OverviewController> {
                           CustomDropdown(
                             selectedValue: controller.selectedSheep,
                             onChanged: (value) {
-                              controller.handlerDropdownSheep(value);
+                              if (value != null) {
+                                controller.handlerDropdownSheep(value);
+                              }
                             },
                             items: controller.sheepList,
                             hintText: 'Pilih Domba',
                           ),
+
                           const SizedBox(width: 10),
                           CustomDateFieldDomba(
                             hintText: "Choose date",

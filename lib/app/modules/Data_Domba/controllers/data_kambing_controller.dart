@@ -42,8 +42,7 @@ class DataKambingController extends GetxController {
 
   void fetchChipId() async {
     try {
-      final response =
-          await _http.get('https://modernfarming-api.vercel.app/api/rfid/get');
+      final response = await _http.get('http://localhost:3000/api/rfid/get');
       if (response.statusCode == 200) {
         chipIdController.text = response.body['data']['chip_id'];
       } else {
@@ -55,15 +54,37 @@ class DataKambingController extends GetxController {
   }
 
   void postData() async {
+    if (chipIdController.text.isEmpty) {
+      Get.snackbar("Error", "Chip ID Tidak Boleh Kosong");
+      return;
+    }
+    if (namaDombaController.text.isEmpty) {
+      Get.snackbar("Error", "Nama Domba Tidak Boleh Kosong");
+      return;
+    }
+    if (selectedDate.value == null) {
+      Get.snackbar("Error", "Tanggal Lahir Tidak Boleh Kosong");
+      return;
+    }
+    if (selectedJenisKelamin.value == null) {
+      Get.snackbar("Error", "Jenis Kelamin Tidak Boleh Kosong");
+      return;
+    }
+
+    final payload = {
+      'id': chipIdController.text,
+      'nama_domba': namaDombaController.text,
+      'usia': selectedDate.value!.toIso8601String(), // Konversi ke ISO 8601
+      'jenis_kelamin': selectedJenisKelamin.value,
+    };
+
+    // Log payload untuk debugging
+    print("Payload being sent: $payload");
+
     try {
       final response = await _http.post(
-        'https://modernfarming-api.vercel.app/api/chip',
-        jsonEncode({
-          'id': chipIdController.text,
-          'nama_domba': namaDombaController.text,
-          'usia': selectedDate.toString(),
-          'jenis_kelamin': selectedJenisKelamin.value,
-        }),
+        'http://localhost:3000/api/chip', // Ganti dengan URL backend
+        jsonEncode(payload),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -72,7 +93,7 @@ class DataKambingController extends GetxController {
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201 || response.statusCode == 200) {
         Get.defaultDialog(
           title: "Success",
           middleText: "Data Berhasil Ditambahkan",
@@ -80,23 +101,22 @@ class DataKambingController extends GetxController {
           confirmTextColor: Colors.white,
           onConfirm: () {
             Get.back();
-            Get.back();
+            fetchDataTable(currentPage); // Refresh data di UI
           },
         );
       } else {
         print('Failed to post data: ${response.body}');
-        throw Exception('Failed to post data');
+        Get.snackbar("Error", "Gagal Menambahkan Data: ${response.body}");
       }
     } catch (e) {
       print('Error posting data: $e');
-      throw Exception('Failed to post data');
+      Get.snackbar("Error", "Terjadi Kesalahan: $e");
     }
   }
 
   void fetchDataTable(int page) async {
     try {
-      final response = await _http.get(
-          "https://modernfarming-api.vercel.app/api/chip",
+      final response = await _http.get("http://localhost:3000/api/chip",
           query: {'page': page.toString()});
       if (response.statusCode == 200) {
         final data = response.body;

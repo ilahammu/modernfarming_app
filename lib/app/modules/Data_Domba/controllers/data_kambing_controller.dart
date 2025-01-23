@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:monitoring_kambing/app/data/datatable_model.dart';
 
 class DataKambingController extends GetxController {
@@ -56,18 +57,22 @@ class DataKambingController extends GetxController {
 
   void postData() async {
     if (chipIdController.text.isEmpty) {
+      print("Chip ID kosong");
       Get.snackbar("Error", "Chip ID Tidak Boleh Kosong");
       return;
     }
     if (namaDombaController.text.isEmpty) {
+      print("Nama Domba kosong");
       Get.snackbar("Error", "Nama Domba Tidak Boleh Kosong");
       return;
     }
     if (selectedDate.value == null) {
+      print("Tanggal Lahir kosong");
       Get.snackbar("Error", "Tanggal Lahir Tidak Boleh Kosong");
       return;
     }
     if (selectedJenisKelamin.value == null) {
+      print("Jenis Kelamin kosong");
       Get.snackbar("Error", "Jenis Kelamin Tidak Boleh Kosong");
       return;
     }
@@ -79,15 +84,16 @@ class DataKambingController extends GetxController {
       'jenis_kelamin': selectedJenisKelamin.value,
     };
 
-    // Log payload untuk debugging
-    print("Payload being sent: $payload");
+    // Log payload dan header
+    print("Payload: $payload");
+    print("Headers: {'Content-Type': 'application/json'}");
 
     try {
       final response = await _http.post(
-        'https://modernfarming-api.vercel.app/api/chip', // Ganti dengan URL backend
-        jsonEncode(payload),
+        'https://modernfarming-api.vercel.app/api/chip',
+        jsonEncode(payload), // Pastikan payload di-encode menjadi JSON
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json', // Tetapkan header yang benar
         },
       );
 
@@ -95,6 +101,7 @@ class DataKambingController extends GetxController {
       print('Response body: ${response.body}');
 
       if (response.statusCode == 201 || response.statusCode == 200) {
+        print("Data berhasil dikirim");
         Get.defaultDialog(
           title: "Success",
           middleText: "Data Berhasil Ditambahkan",
@@ -131,6 +138,7 @@ class DataKambingController extends GetxController {
             'Usia (Bulan)': item['usia'].toString(),
             'Jenis Kelamin': item['jenis_kelamin'],
             'Created At': item['createdAt'],
+            'UpdatedAt': item['updatedAt'],
           }));
         }
         currentPage = page;

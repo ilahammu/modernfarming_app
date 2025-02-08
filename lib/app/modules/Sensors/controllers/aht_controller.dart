@@ -58,6 +58,7 @@ class IndeksLingkunganController extends GetxController {
 
   var selectedHistory = "Current".obs;
   var isFetching = false.obs;
+  var isLoading = true.obs; // Tambahkan indikator loading
 
   void handlerSwitch(bool value) {
     isFetching.value = value;
@@ -82,7 +83,8 @@ class IndeksLingkunganController extends GetxController {
     selectedHistory.value = history!;
   }
 
-  void fetchSheepData() async {
+  Future<void> fetchSheepData() async {
+    isLoading.value = true;
     try {
       int page = 1;
       final Set<String> seenChipIds = {};
@@ -111,13 +113,19 @@ class IndeksLingkunganController extends GetxController {
           if (page >= totalPages) break;
           page++;
         } else {
-          throw Exception('Failed to load sheep data');
+          throw Exception("Failed to load sheep data");
         }
       }
 
-      sheepList.value = allSheep;
+      sheepList.assignAll(allSheep); // Pastikan RxList terupdate
+      sheepList.refresh(); // Paksa GetX update UI
+      if (allSheep.isNotEmpty) {
+        selectedSheep.value = allSheep.first['chip_id']; // Set default value
+      }
     } catch (e) {
-      throw Exception('Failed to fetch sheep data: $e');
+      print("Error fetching sheep data: $e");
+    } finally {
+      isLoading.value = false;
     }
   }
 
@@ -299,13 +307,13 @@ class IndeksLingkunganController extends GetxController {
       if (selectedSheep.value == null || selectedDate.value == null)
         return; // Check if no sheep or date is selected
 
-      final String timeRange = selectedTimeRange.value ?? 'Per-Hari';
+      final String timeRange = selectedTimeRange.value ?? 'Daily';
 
-      if (timeRange == 'Per-Hari') {
+      if (timeRange == 'Daily') {
         await fetchDailyData(selectedDate.value!);
-      } else if (timeRange == 'Per-Minggu') {
+      } else if (timeRange == 'Weekly') {
         await fetchWeeklyData(selectedDate.value!);
-      } else if (timeRange == 'Per-Bulan') {
+      } else if (timeRange == 'Weekly') {
         await fetchMonthlyData(selectedDate.value!);
       }
     } catch (e) {

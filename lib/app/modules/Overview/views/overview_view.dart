@@ -54,16 +54,27 @@ class OverviewView extends GetView<OverviewController> {
                       child: Row(
                         children: <Widget>[
                           const SizedBox(width: 1),
-                          CustomDropdown(
-                            selectedValue: controller.selectedSheep,
-                            onChanged: (value) {
-                              if (value != null) {
-                                controller.handlerDropdownSheep(value);
-                              }
-                            },
-                            items: controller.sheepList,
-                            hintText: 'Pilih Domba',
-                          ),
+                          Obx(() {
+                            if (controller.isLoading.value) {
+                              return CircularProgressIndicator(); // Tampilkan loading dulu
+                            }
+
+                            if (controller.sheepList.isEmpty) {
+                              return Text(
+                                  "Tidak ada data"); // Jika kosong, tampilkan pesan
+                            }
+
+                            return CustomDropdown(
+                              selectedValue: controller.selectedSheep,
+                              onChanged: (value) {
+                                if (value != null) {
+                                  controller.handlerDropdownSheep(value);
+                                }
+                              },
+                              items: controller.sheepList,
+                              hintText: 'Pilih Domba',
+                            );
+                          }),
 
                           const SizedBox(width: 10),
                           CustomDateFieldDomba(

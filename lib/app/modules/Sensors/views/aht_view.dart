@@ -3,7 +3,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:monitoring_kambing/app/global_component/custom_button.dart';
 import 'package:monitoring_kambing/app/global_component/custom_datatable.dart';
 import 'package:monitoring_kambing/app/global_component/custom_dropdown.dart';
 import 'package:monitoring_kambing/app/global_component/custom_linechart.dart';
@@ -48,15 +47,28 @@ class IndeksLingkunganView extends GetView<IndeksLingkunganController> {
                     children: [
                       Row(
                         children: <Widget>[
-                          CustomDropdown(
-                            selectedValue: controller.selectedSheep,
-                            onChanged: (value) {
-                              controller.handlerDropdownSheep(value);
-                            },
-                            items: controller.sheepList,
-                            hintText: 'Pilih Domba',
-                          ),
-                          const SizedBox(width: 10), // Add spacing
+                          Obx(() {
+                            if (controller.isLoading.value) {
+                              return CircularProgressIndicator(); // Tampilkan loading dulu
+                            }
+
+                            if (controller.sheepList.isEmpty) {
+                              return Text(
+                                  "Tidak ada data"); // Jika kosong, tampilkan pesan
+                            }
+
+                            return CustomDropdown(
+                              selectedValue: controller.selectedSheep,
+                              onChanged: (value) {
+                                if (value != null) {
+                                  controller.handlerDropdownSheep(value);
+                                }
+                              },
+                              items: controller.sheepList,
+                              hintText: 'Pilih Domba',
+                            );
+                          }),
+                          const SizedBox(width: 10),
                           CustomDropdown(
                             selectedValue: controller.selectedTimeRange,
                             onChanged: (value) {
@@ -72,13 +84,13 @@ class IndeksLingkunganView extends GetView<IndeksLingkunganController> {
                                     controller.selectedDate.value!);
                               }
                             },
-                            items: ['Per-Hari', 'Per-Minggu', 'Per-Bulan'].obs,
-                            hintText: 'Atur Waktu',
-                            isMap: false, // Specify that items are not maps
+                            items: ['Daily', 'Weekly', 'Monthly'].obs,
+                            hintText: 'Date Time',
+                            isMap: false,
                           ),
-                          const SizedBox(width: 10), // Add spacing
+                          const SizedBox(width: 10),
                           CustomDateFieldDomba(
-                            hintText: "Pilih Tanggal",
+                            hintText: "Choose date",
                             controller: controller.tanggalLahirController,
                             onDateSelected: (date) {
                               controller.updateSelectedDate(date);
@@ -86,34 +98,6 @@ class IndeksLingkunganView extends GetView<IndeksLingkunganController> {
                             isEnabled: true,
                             width: 150,
                             height: 30,
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          CustomButton(
-                            onPressed: () {
-                              controller.resetState();
-                            },
-                            text: "Refresh Data",
-                            bgColor: Color.fromARGB(255, 10, 182, 0),
-                            fgColor: Colors.white,
-                            textColor: Colors.white,
-                            width: 120,
-                            height: 40,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          SizedBox(
-                            width: 10,
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.refresh),
-                            color: Color.fromARGB(255, 10, 182, 0),
-                            iconSize: 30,
-                            onPressed: () {
-                              controller.fetchIndeksData();
-                            },
                           ),
                         ],
                       ),

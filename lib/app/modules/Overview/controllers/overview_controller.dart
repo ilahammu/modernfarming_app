@@ -58,7 +58,8 @@ class OverviewController extends GetxController {
     selectedHistory.value = history!;
   }
 
-  void fetchSheepData() async {
+  Future<void> fetchSheepData() async {
+    isLoading.value = true;
     try {
       int page = 1;
       final Set<String> seenChipIds = {};
@@ -70,33 +71,36 @@ class OverviewController extends GetxController {
           query: {'page': page.toString()},
         );
 
-        if (response.statusCode == 200 && response.body != null) {
+        if (response.statusCode == 200) {
           final data = response.body['data']['rows'];
-          if (data != null && data is List) {
-            for (var item in data) {
-              final chipId = item['chip_id']?.toString() ?? '';
-              if (chipId.isNotEmpty && !seenChipIds.contains(chipId)) {
-                seenChipIds.add(chipId);
-                allSheep.add({
-                  'nama_domba': item['nama_domba']?.toString() ?? 'Unknown',
-                  'chip_id': chipId,
-                });
-              }
+          for (var item in data) {
+            final chipId = item['id'].toString();
+            if (!seenChipIds.contains(chipId)) {
+              seenChipIds.add(chipId);
+              allSheep.add({
+                'nama_domba': item['nama_domba'].toString(),
+                'chip_id': chipId,
+              });
             }
           }
 
-          final totalPages = response.body['pagination']?['totalPages'] ?? 1;
+          final totalPages = response.body['pagination']['totalPages'];
           if (page >= totalPages) break;
           page++;
         } else {
-          throw Exception('Failed to load sheep data: ${response.statusText}');
+          throw Exception("Failed to load sheep data");
         }
       }
 
-      sheepList.value = allSheep;
-      print("Sheep list loaded successfully: $sheepList");
+      sheepList.assignAll(allSheep); // Pastikan RxList terupdate
+      sheepList.refresh(); // Paksa GetX update UI
+      if (allSheep.isNotEmpty) {
+        selectedSheep.value = allSheep.first['chip_id']; // Set default value
+      }
     } catch (e) {
-      print('Failed to fetch sheep data: $e');
+      print("Error fetching sheep data: $e");
+    } finally {
+      isLoading.value = false;
     }
   }
 

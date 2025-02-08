@@ -90,7 +90,7 @@ class IndeksLingkunganController extends GetxController {
 
       while (true) {
         final response = await _http.get(
-          'https://modernfarming-api.vercel.app/api/chip',
+          'http://localhost:3000/api/chip',
           query: {'page': page.toString()},
         );
 
@@ -128,7 +128,7 @@ class IndeksLingkunganController extends GetxController {
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
       final String url =
-          'https://modernfarming-api.vercel.app/api/aht/daily/$formattedDate/$chipId';
+          'http://localhost:3000/api/aht/daily/$formattedDate/$chipId';
       print(url);
       final response = await _http.get(url);
 
@@ -190,7 +190,7 @@ class IndeksLingkunganController extends GetxController {
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
       final String url =
-          'https://modernfarming-api.vercel.app/api/aht/weekly/$formattedDate/$chipId';
+          'http://localhost:3000/api/aht/weekly/$formattedDate/$chipId';
       print(url);
       final response = await _http.get(url);
 
@@ -245,7 +245,7 @@ class IndeksLingkunganController extends GetxController {
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
       final String url =
-          'https://modernfarming-api.vercel.app/api/aht/monthly/$formattedDate/$chipId';
+          'http://localhost:3000/api/aht/monthly/$formattedDate/$chipId';
       print(url);
       final response = await _http.get(url);
 
@@ -317,8 +317,7 @@ class IndeksLingkunganController extends GetxController {
   void fetchListDomba() async {
     print('Jumlah domba sebelum fetch: ${sheepList.length}');
     try {
-      final response =
-          await _http.get('https://modernfarming-api.vercel.app/api/chip');
+      final response = await _http.get('http://localhost:3000/api/chip');
       if (response.statusCode == 200) {
         final data = response.body['data']['rows'];
         final Set<String> seenChipIds = {};
@@ -345,8 +344,7 @@ class IndeksLingkunganController extends GetxController {
 
   void fetchDataTable(int page) async {
     try {
-      final response = await _http.get(
-          'https://modernfarming-api.vercel.app/api/aht',
+      final response = await _http.get('http://localhost:3000/api/aht',
           query: {'page': page.toString()});
       if (response.statusCode == 200) {
         final data = response.body;

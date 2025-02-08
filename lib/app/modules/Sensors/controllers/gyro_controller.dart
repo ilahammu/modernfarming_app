@@ -67,7 +67,7 @@ class GyroController extends GetxController {
 
       while (true) {
         final response = await _http.get(
-          'https://modernfarming-api.vercel.app/api/chip',
+          'http://localhost:3000/api/chip',
           query: {'page': page.toString()},
         );
 
@@ -108,7 +108,7 @@ class GyroController extends GetxController {
 
       print('Fetching data for sheep: ${selectedSheep.value}');
       final response = await _http.get(
-        'https://modernfarming-api.vercel.app/api/mpu/graph',
+        'http://localhost:3000/api/mpu/graph',
         query: {'chip_id': selectedSheep.value},
       );
 
@@ -206,8 +206,7 @@ class GyroController extends GetxController {
   void fetchListDomba() async {
     print('Jumlah domba sebelum fetch: ${sheepList.length}');
     try {
-      final response =
-          await _http.get('https://modernfarming-api.vercel.app/api/chip');
+      final response = await _http.get('http://localhost:3000/api/chip');
       if (response.statusCode == 200) {
         final data = response.body['data']['rows'];
         final Set<String> seenChipIds = {};
@@ -234,8 +233,7 @@ class GyroController extends GetxController {
 
   void fetchDataTable(int page) async {
     try {
-      final response = await _http.get(
-          'https://modernfarming-api.vercel.app/api/mpu',
+      final response = await _http.get('http://localhost:3000/api/mpu',
           query: {'page': page.toString()});
       if (response.statusCode == 200) {
         final data = response.body;

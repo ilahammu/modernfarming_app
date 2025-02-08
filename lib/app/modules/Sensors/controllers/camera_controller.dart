@@ -20,7 +20,7 @@
 
 //   void fetchDataTable(int page) async {
 //     try {
-//       final response = await _http.get("https://modernfarming-api.vercel.app/api/kamera",
+//       final response = await _http.get("http://localhost:3000/api/kamera",
 //           query: {'page': page.toString()});
 //       if (response.statusCode == 200) {
 //         final data = response.body;

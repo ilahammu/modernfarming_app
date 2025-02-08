@@ -43,8 +43,7 @@ class DataKambingController extends GetxController {
 
   void fetchChipId() async {
     try {
-      final response =
-          await _http.get('https://modernfarming-api.vercel.app/api/rfid/get');
+      final response = await _http.get('http://localhost:3000/api/rfid/get');
       if (response.statusCode == 200) {
         chipIdController.text = response.body['data']['chip_id'];
       } else {
@@ -90,7 +89,7 @@ class DataKambingController extends GetxController {
 
     try {
       final response = await _http.post(
-        'https://modernfarming-api.vercel.app/api/chip',
+        'http://localhost:3000/api/chip',
         jsonEncode(payload), // Pastikan payload di-encode menjadi JSON
         headers: {
           'Content-Type': 'application/json', // Tetapkan header yang benar
@@ -124,8 +123,7 @@ class DataKambingController extends GetxController {
 
   void fetchDataTable(int page) async {
     try {
-      final response = await _http.get(
-          "https://modernfarming-api.vercel.app/api/chip",
+      final response = await _http.get("http://localhost:3000/api/chip",
           query: {'page': page.toString()});
       if (response.statusCode == 200) {
         final data = response.body;

@@ -115,15 +115,44 @@ class LoadcellController extends GetxController {
         }
       }
 
-      sheepList.assignAll(allSheep); // Pastikan RxList terupdate
-      sheepList.refresh(); // Paksa GetX update UI
-      if (allSheep.isNotEmpty) {
-        selectedSheep.value = allSheep.first['chip_id']; // Set default value
+      sheepList.assignAll(allSheep); // Perbarui daftar dropdown
+      sheepList.refresh(); // Paksa UI diperbarui
+
+      // Hanya set default jika belum ada yang dipilih sebelumnya
+      if (selectedSheep.value == null && allSheep.isNotEmpty) {
+        selectedSheep.value = null; // Pastikan tetap null agar hint muncul
       }
     } catch (e) {
       print("Error fetching sheep data: $e");
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  void fetchListDomba() async {
+    try {
+      final response = await _http.get('http://localhost:3000/api/chip');
+      if (response.statusCode == 200) {
+        final data = response.body['data']['rows'];
+        final Set<String> seenChipIds = {};
+        sheepList.clear();
+        for (var item in data) {
+          final chipId = item['chip_id'].toString();
+          if (!seenChipIds.contains(chipId)) {
+            seenChipIds.add(chipId);
+            sheepList.add({
+              'nama_domba': item['nama_domba'].toString(),
+              'chip_id': chipId
+            });
+          }
+        }
+        sheepList.sort((a, b) => a['nama_domba']!.compareTo(b['nama_domba']!));
+        print("Sheep list: $sheepList");
+      } else {
+        throw Exception('Failed to load sheep list');
+      }
+    } catch (e) {
+      throw Exception('Failed to fetch sheep list: $e');
     }
   }
 
@@ -282,35 +311,6 @@ class LoadcellController extends GetxController {
       }
     } catch (e) {
       throw Exception('Failed to fetch data');
-    }
-  }
-
-  void fetchListDomba() async {
-    print('Jumlah domba sebelum fetch: ${sheepList.length}');
-    try {
-      final response = await _http.get('http://localhost:3000/api/chip');
-      if (response.statusCode == 200) {
-        final data = response.body['data']['rows'];
-        final Set<String> seenChipIds = {};
-        sheepList.clear();
-        for (var item in data) {
-          final chipId = item['chip_id'].toString();
-          if (!seenChipIds.contains(chipId)) {
-            seenChipIds.add(chipId);
-            sheepList.add({
-              'nama_domba': item['nama_domba'].toString(),
-              'chip_id': chipId
-            });
-          }
-        }
-        // Sort the list in ascending order
-        sheepList.sort((a, b) => a['nama_domba']!.compareTo(b['nama_domba']!));
-        print('Jumlah domba setelah fetch: ${sheepList.length}');
-      } else {
-        throw Exception('Failed to load sheep list');
-      }
-    } catch (e) {
-      throw Exception('Failed to fetch sheep list: $e');
     }
   }
 

@@ -137,8 +137,8 @@ class DataKambingView extends GetView<DataKambingController> {
                                   width: 170,
                                   height: 60,
                                   child: myTextFormField(
-                                    "NAMA DOMBA",
-                                    "NAMA DOMBA",
+                                    "SHEEP NAME",
+                                    "SHEEP NAME",
                                     controller.namaDombaController,
                                     TextInputType.name,
                                     false,
@@ -150,7 +150,7 @@ class DataKambingView extends GetView<DataKambingController> {
                                   height: 10,
                                 ),
                                 Text(
-                                  "TANGGAL LAHIR",
+                                  "BIRTH DATE",
                                   style: GoogleFonts.ramabhadra(
                                       color: Colors.black,
                                       fontSize: 12,
@@ -160,7 +160,7 @@ class DataKambingView extends GetView<DataKambingController> {
                                   height: 5,
                                 ),
                                 CustomDateField(
-                                  hintText: "Tanggal Lahir",
+                                  hintText: "Birth Date",
                                   controller: controller.tanggalLahirController,
                                   onDateSelected: (date) {
                                     controller.updateSelectedDate(date);
@@ -174,7 +174,7 @@ class DataKambingView extends GetView<DataKambingController> {
                                   height: 15,
                                 ),
                                 Text(
-                                  "JENIS KELAMIN",
+                                  "SEX",
                                   style: GoogleFonts.ramabhadra(
                                       color: Colors.black,
                                       fontSize: 12,
@@ -191,7 +191,7 @@ class DataKambingView extends GetView<DataKambingController> {
                                         .handlerDropdownJenisKelamin(newValue);
                                   },
                                   items: controller.listDropdownJenisKelamin,
-                                  hintText: 'Pilih Jenis Kelamin',
+                                  hintText: 'Choose Gender',
                                 ),
                                 const SizedBox(
                                   height: 30,

@@ -92,10 +92,12 @@ class OverviewController extends GetxController {
         }
       }
 
-      sheepList.assignAll(allSheep); // Pastikan RxList terupdate
-      sheepList.refresh(); // Paksa GetX update UI
-      if (allSheep.isNotEmpty) {
-        selectedSheep.value = allSheep.first['chip_id']; // Set default value
+      sheepList.assignAll(allSheep); // Perbarui daftar dropdown
+      sheepList.refresh(); // Paksa UI diperbarui
+
+      // Hanya set default jika belum ada yang dipilih sebelumnya
+      if (selectedSheep.value == null && allSheep.isNotEmpty) {
+        selectedSheep.value = null; // Pastikan tetap null agar hint muncul
       }
     } catch (e) {
       print("Error fetching sheep data: $e");

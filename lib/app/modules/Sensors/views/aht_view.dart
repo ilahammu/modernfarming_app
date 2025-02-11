@@ -10,6 +10,7 @@ import 'package:monitoring_kambing/app/global_component/custom_pagination.dart';
 import 'package:monitoring_kambing/app/global_component/datefield_analytic.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../global_component/custom_button.dart';
 import '../controllers/aht_controller.dart';
 
 class IndeksLingkunganView extends GetView<IndeksLingkunganController> {
@@ -73,13 +74,13 @@ class IndeksLingkunganView extends GetView<IndeksLingkunganController> {
                             selectedValue: controller.selectedTimeRange,
                             onChanged: (value) {
                               controller.handlerDropdownTimeRange(value);
-                              if (value == 'Per-Hari') {
+                              if (value == 'Daily') {
                                 controller.fetchDailyData(
                                     controller.selectedDate.value!);
-                              } else if (value == 'Per-Minggu') {
+                              } else if (value == 'Weekly') {
                                 controller.fetchWeeklyData(
                                     controller.selectedDate.value!);
-                              } else if (value == 'Per-Bulan') {
+                              } else if (value == 'Monthly') {
                                 controller.fetchMonthlyData(
                                     controller.selectedDate.value!);
                               }
@@ -98,6 +99,34 @@ class IndeksLingkunganView extends GetView<IndeksLingkunganController> {
                             isEnabled: true,
                             width: 150,
                             height: 30,
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          CustomButton(
+                            onPressed: () {
+                              controller.resetState();
+                            },
+                            text: "Refresh Data",
+                            bgColor: Color.fromARGB(255, 10, 182, 0),
+                            fgColor: Colors.white,
+                            textColor: Colors.white,
+                            width: 120,
+                            height: 40,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          SizedBox(
+                            width: 10,
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.refresh),
+                            color: Color.fromARGB(255, 10, 182, 0),
+                            iconSize: 30,
+                            onPressed: () {
+                              controller.fetchIndeksData();
+                            },
                           ),
                         ],
                       ),
@@ -142,7 +171,7 @@ class IndeksLingkunganView extends GetView<IndeksLingkunganController> {
                                     child: Column(
                                       children: [
                                         Text(
-                                          'Grafik Suhu',
+                                          'Temperature Chart',
                                           style: TextStyle(
                                             fontSize: 20,
                                             fontWeight: FontWeight.bold,
@@ -158,11 +187,11 @@ class IndeksLingkunganView extends GetView<IndeksLingkunganController> {
                                             dataType: controller
                                                         .selectedTimeRange
                                                         .value ==
-                                                    'Per-Bulan'
+                                                    'Monthly'
                                                 ? 'suhu'
                                                 : controller.selectedTimeRange
                                                             .value ==
-                                                        'Per-Minggu'
+                                                        'Weekly'
                                                     ? 'suhu'
                                                     : 'suhu',
                                           );
@@ -193,7 +222,7 @@ class IndeksLingkunganView extends GetView<IndeksLingkunganController> {
                                     child: Column(
                                       children: [
                                         Text(
-                                          'Grafik Kelembaban',
+                                          'Humidity Chart',
                                           style: TextStyle(
                                             fontSize: 20,
                                             fontWeight: FontWeight.bold,
@@ -209,11 +238,11 @@ class IndeksLingkunganView extends GetView<IndeksLingkunganController> {
                                             dataType: controller
                                                         .selectedTimeRange
                                                         .value ==
-                                                    'Per-Bulan'
+                                                    'Monthly'
                                                 ? 'kelembapan'
                                                 : controller.selectedTimeRange
                                                             .value ==
-                                                        'Per-Minggu'
+                                                        'Weekly'
                                                     ? 'kelembapan'
                                                     : 'kelembapan',
                                           );
@@ -240,7 +269,7 @@ class IndeksLingkunganView extends GetView<IndeksLingkunganController> {
                     } else {
                       return const Center(
                         child: Text(
-                          'Pilih domba, waktu, dan tanggal untuk menampilkan grafik',
+                          'Choose sheep, date time, and date to see the chart',
                           style: TextStyle(
                             fontSize: 20,
                             color: Color.fromARGB(255, 29, 29, 29),

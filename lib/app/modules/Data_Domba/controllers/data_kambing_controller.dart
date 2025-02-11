@@ -35,9 +35,9 @@ class DataKambingController extends GetxController {
   ];
   final listColumnDataTable = [
     'UID',
-    'Nama Domba',
-    'Usia (Bulan)',
-    'Jenis Kelamin',
+    'Sheep Name',
+    'Age (Month)',
+    'Sex',
     'Created At',
   ].obs;
 
@@ -132,11 +132,10 @@ class DataKambingController extends GetxController {
         for (var item in data['data']['rows']) {
           listDataTable.add(DataTableModel({
             'UID': item['id'],
-            'Nama Domba': item['nama_domba'],
-            'Usia (Bulan)': item['usia'].toString(),
-            'Jenis Kelamin': item['jenis_kelamin'],
+            'Sheep Name': item['nama_domba'],
+            'Age (Month)': item['usia'].toString(),
+            'Sex': item['jenis_kelamin'],
             'Created At': item['createdAt'],
-            'UpdatedAt': item['updatedAt'],
           }));
         }
         currentPage = page;

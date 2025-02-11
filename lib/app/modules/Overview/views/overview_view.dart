@@ -75,7 +75,6 @@ class OverviewView extends GetView<OverviewController> {
                               hintText: 'Pilih Domba',
                             );
                           }),
-
                           const SizedBox(width: 10),
                           CustomDateFieldDomba(
                             hintText: "Choose date",

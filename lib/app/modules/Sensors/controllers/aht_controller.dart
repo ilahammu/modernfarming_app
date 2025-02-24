@@ -389,10 +389,13 @@ class IndeksLingkunganController extends GetxController {
     fetchWeeklyData(DateTime.now());
     fetchMonthlyData(DateTime.now());
     fetchDataTable(currentPage);
+    timer =
+        Timer.periodic(Duration(seconds: 5), (Timer t) => fetchIndeksData());
   }
 
   @override
   void dispose() {
+    timer?.cancel();
     tanggalLahirController.dispose();
     super.dispose();
   }

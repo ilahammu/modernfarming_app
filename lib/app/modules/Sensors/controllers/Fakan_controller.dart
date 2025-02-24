@@ -381,10 +381,15 @@ class WeightFoodController extends GetxController {
     fetchMonthlyData(DateTime.now());
     fetchListDomba();
     fetchDataTable(currentPage);
+
+    // Set up a timer to refresh data every 5 seconds
+    timer = Timer.periodic(
+        Duration(seconds: 5), (Timer t) => fetchLoadcellPakanData());
   }
 
   @override
   void dispose() {
+    timer?.cancel();
     tanggalLahirController.dispose();
     super.dispose();
   }

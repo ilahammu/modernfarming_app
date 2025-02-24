@@ -276,5 +276,12 @@ class GyroController extends GetxController {
     fetchGyroData();
     fetchListDomba();
     fetchDataTable(currentPage);
+    timer = Timer.periodic(Duration(seconds: 5), (Timer t) => fetchGyroData());
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
   }
 }

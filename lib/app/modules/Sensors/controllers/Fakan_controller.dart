@@ -16,7 +16,7 @@ class WeightFoodController extends GetxController {
   final listColumnTable = [
     'CHIP-ID',
     'Sheep Name',
-    'Sex',
+    'Gender',
     'Food Weight (Gram)',
     'Created At',
   ].obs;
@@ -355,7 +355,7 @@ class WeightFoodController extends GetxController {
           listDataTable.add(DataTableModel({
             'CHIP-ID': item['chip_id'].toString(),
             'Sheep Name': item['nama_domba'].toString(),
-            'Sex': item['jenis_kelamin'].toString(),
+            'Gender': item['jenis_kelamin'].toString(),
             'Food Weight (Gram)': item['berat_pakan'].toString(),
             'Created At': DateFormat('yyyy-MM-dd HH:mm').format(createdAt),
           }));

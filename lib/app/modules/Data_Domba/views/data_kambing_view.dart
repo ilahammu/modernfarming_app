@@ -174,7 +174,7 @@ class DataKambingView extends GetView<DataKambingController> {
                                   height: 15,
                                 ),
                                 Text(
-                                  "SEX",
+                                  "Gender",
                                   style: GoogleFonts.ramabhadra(
                                       color: Colors.black,
                                       fontSize: 12,

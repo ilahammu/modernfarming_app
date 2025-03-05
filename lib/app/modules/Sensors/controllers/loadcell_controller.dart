@@ -16,7 +16,7 @@ class LoadcellController extends GetxController {
   final listColumnTable = [
     'CHIP-ID',
     'Sheep Name',
-    'Sex',
+    'Gender',
     'Weight (KG)',
     'Created At',
   ].obs;
@@ -89,6 +89,7 @@ class LoadcellController extends GetxController {
       final List<Map<String, String>> allSheep = [];
 
       while (true) {
+        print("Fetching page: $page"); // Debugging log
         final response = await _http.get(
           'http://localhost:3000/api/chip',
           query: {'page': page.toString()},
@@ -96,6 +97,8 @@ class LoadcellController extends GetxController {
 
         if (response.statusCode == 200) {
           final data = response.body['data']['rows'];
+          print("Data received: ${data.length} items"); // Debugging log
+
           for (var item in data) {
             final chipId = item['id'].toString();
             if (!seenChipIds.contains(chipId)) {
@@ -111,17 +114,14 @@ class LoadcellController extends GetxController {
           if (page >= totalPages) break;
           page++;
         } else {
-          throw Exception("Failed to load sheep data");
+          print("Error fetching page $page: ${response.statusCode}");
+          break; // Jangan loop terus jika ada error
         }
       }
 
-      sheepList.assignAll(allSheep); // Perbarui daftar dropdown
-      sheepList.refresh(); // Paksa UI diperbarui
-
-      // Hanya set default jika belum ada yang dipilih sebelumnya
-      if (selectedSheep.value == null && allSheep.isNotEmpty) {
-        selectedSheep.value = null; // Pastikan tetap null agar hint muncul
-      }
+      sheepList.assignAll(allSheep);
+      sheepList.refresh();
+      print("Final sheep list: $sheepList");
     } catch (e) {
       print("Error fetching sheep data: $e");
     } finally {
@@ -153,6 +153,25 @@ class LoadcellController extends GetxController {
       }
     } catch (e) {
       throw Exception('Failed to fetch sheep list: $e');
+    }
+  }
+
+  void fetchLoadcellData() async {
+    try {
+      if (selectedSheep.value == null || selectedDate.value == null)
+        return; // Check if no sheep or date is selected
+
+      final String timeRange = selectedTimeRange.value ?? 'Daily';
+
+      if (timeRange == 'Daily') {
+        await fetchDailyData(selectedDate.value!);
+      } else if (timeRange == 'Weekly') {
+        await fetchWeeklyData(selectedDate.value!);
+      } else if (timeRange == 'Monthly') {
+        await fetchMonthlyData(selectedDate.value!);
+      }
+    } catch (e) {
+      throw Exception('Failed to fetch data');
     }
   }
 
@@ -295,25 +314,6 @@ class LoadcellController extends GetxController {
     }
   }
 
-  void fetchLoadcellData() async {
-    try {
-      if (selectedSheep.value == null || selectedDate.value == null)
-        return; // Check if no sheep or date is selected
-
-      final String timeRange = selectedTimeRange.value ?? 'Daily';
-
-      if (timeRange == 'Daily') {
-        await fetchDailyData(selectedDate.value!);
-      } else if (timeRange == 'Weekly') {
-        await fetchWeeklyData(selectedDate.value!);
-      } else if (timeRange == 'Monthly') {
-        await fetchMonthlyData(selectedDate.value!);
-      }
-    } catch (e) {
-      throw Exception('Failed to fetch data');
-    }
-  }
-
   void fetchDataTable(int page) async {
     try {
       final response = await _http.get(
@@ -328,7 +328,7 @@ class LoadcellController extends GetxController {
           listDataTable.add(DataTableModel({
             'CHIP-ID': item['chip_id'].toString(),
             'Sheep Name': item['nama_domba'].toString(),
-            'Sex': item['jenis_kelamin'].toString(),
+            'Gender': item['jenis_kelamin'].toString(),
             'Weight (KG)': item['berat'].toString(),
             'Created At': DateFormat('yyyy-MM-dd HH:mm').format(createdAt),
           }));

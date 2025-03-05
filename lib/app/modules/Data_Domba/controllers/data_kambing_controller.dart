@@ -37,7 +37,7 @@ class DataKambingController extends GetxController {
     'UID',
     'Sheep Name',
     'Age (Month)',
-    'Sex',
+    'Gender',
     'Created At',
   ].obs;
 
@@ -134,7 +134,7 @@ class DataKambingController extends GetxController {
             'UID': item['id'],
             'Sheep Name': item['nama_domba'],
             'Age (Month)': item['usia'].toString(),
-            'Sex': item['jenis_kelamin'],
+            'Gender': item['jenis_kelamin'],
             'Created At': item['createdAt'],
           }));
         }

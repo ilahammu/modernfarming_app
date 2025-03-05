@@ -13,7 +13,7 @@ class GyroController extends GetxController {
   final listColumnTable = [
     'CHIP-ID',
     'Sheep Name',
-    'Sex',
+    'Gender',
     'X',
     'Y',
     'Z',
@@ -251,7 +251,7 @@ class GyroController extends GetxController {
           listDataTable.add(DataTableModel({
             'CHIP-ID': item['chip_id'],
             'Sheep Name': item['nama_domba'],
-            'Sex': item['jenis_kelamin'],
+            'Gender': item['jenis_kelamin'],
             'X': item['acc_x'].toString(),
             'Y': item['acc_y'].toString(),
             'Z': item['acc_z'].toString(),

@@ -92,7 +92,7 @@ class IndeksLingkunganController extends GetxController {
 
       while (true) {
         final response = await _http.get(
-          'http://localhost:3000/api/chip',
+          'https://l7xgct6c-3000.asse.devtunnels.ms/api/chip',
           query: {'page': page.toString()},
         );
 
@@ -133,7 +133,8 @@ class IndeksLingkunganController extends GetxController {
 
   void fetchListDomba() async {
     try {
-      final response = await _http.get('http://localhost:3000/api/chip');
+      final response =
+          await _http.get('https://l7xgct6c-3000.asse.devtunnels.ms/api/chip');
       if (response.statusCode == 200) {
         final data = response.body['data']['rows'];
         final Set<String> seenChipIds = {};
@@ -165,7 +166,7 @@ class IndeksLingkunganController extends GetxController {
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
       final String url =
-          'http://localhost:3000/api/aht/daily/$formattedDate/$chipId';
+          'https://l7xgct6c-3000.asse.devtunnels.ms/api/aht/daily/$formattedDate/$chipId';
       print(url);
       final response = await _http.get(url);
 
@@ -227,7 +228,7 @@ class IndeksLingkunganController extends GetxController {
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
       final String url =
-          'http://localhost:3000/api/aht/weekly/$formattedDate/$chipId';
+          'https://l7xgct6c-3000.asse.devtunnels.ms/api/aht/weekly/$formattedDate/$chipId';
       print(url);
       final response = await _http.get(url);
 
@@ -282,7 +283,7 @@ class IndeksLingkunganController extends GetxController {
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
       final String url =
-          'http://localhost:3000/api/aht/monthly/$formattedDate/$chipId';
+          'https://l7xgct6c-3000.asse.devtunnels.ms/api/aht/monthly/$formattedDate/$chipId';
       print(url);
       final response = await _http.get(url);
 
@@ -353,7 +354,8 @@ class IndeksLingkunganController extends GetxController {
 
   void fetchDataTable(int page) async {
     try {
-      final response = await _http.get('http://localhost:3000/api/aht',
+      final response = await _http.get(
+          'https://l7xgct6c-3000.asse.devtunnels.ms/api/aht',
           query: {'page': page.toString()});
       if (response.statusCode == 200) {
         final data = response.body;

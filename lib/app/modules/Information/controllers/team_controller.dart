@@ -56,9 +56,9 @@ class TeamController extends GetxController {
         'text': "MEMBER",
       },
       {
-        'imageUrl': 'assets/images/anggota/meja.jpeg',
-        'name': 'Meja Keren',
-        'jobType': 'Jaringan',
+        'imageUrl': 'assets/images/anggota/ganteng.jpg',
+        'name': 'Ilham Muhijri Yosefin',
+        'jobType': 'Software Engineer',
         'text': "asdasd",
       },
     ];

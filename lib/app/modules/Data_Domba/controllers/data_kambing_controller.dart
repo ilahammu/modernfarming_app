@@ -43,7 +43,8 @@ class DataKambingController extends GetxController {
 
   void fetchChipId() async {
     try {
-      final response = await _http.get('http://localhost:3000/api/rfid/get');
+      final response = await _http
+          .get('https://l7xgct6c-3000.asse.devtunnels.ms/api/rfid/get');
       if (response.statusCode == 200) {
         chipIdController.text = response.body['data']['chip_id'];
       } else {
@@ -89,7 +90,7 @@ class DataKambingController extends GetxController {
 
     try {
       final response = await _http.post(
-        'http://localhost:3000/api/chip',
+        'https://l7xgct6c-3000.asse.devtunnels.ms/api/chip',
         jsonEncode(payload), // Pastikan payload di-encode menjadi JSON
         headers: {
           'Content-Type': 'application/json', // Tetapkan header yang benar
@@ -123,7 +124,8 @@ class DataKambingController extends GetxController {
 
   void fetchDataTable(int page) async {
     try {
-      final response = await _http.get("http://localhost:3000/api/chip",
+      final response = await _http.get(
+          "https://l7xgct6c-3000.asse.devtunnels.ms/api/chip",
           query: {'page': page.toString()});
       if (response.statusCode == 200) {
         final data = response.body;

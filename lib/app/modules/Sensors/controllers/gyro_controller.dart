@@ -70,7 +70,7 @@ class GyroController extends GetxController {
 
       while (true) {
         final response = await _http.get(
-          'http://localhost:3000/api/chip',
+          'https://l7xgct6c-3000.asse.devtunnels.ms/api/chip',
           query: {'page': page.toString()},
         );
 
@@ -111,7 +111,8 @@ class GyroController extends GetxController {
 
   void fetchListDomba() async {
     try {
-      final response = await _http.get('http://localhost:3000/api/chip');
+      final response =
+          await _http.get('https://l7xgct6c-3000.asse.devtunnels.ms/api/chip');
       if (response.statusCode == 200) {
         final data = response.body['data']['rows'];
         final Set<String> seenChipIds = {};
@@ -145,7 +146,7 @@ class GyroController extends GetxController {
 
       print('Fetching data for sheep: ${selectedSheep.value}');
       final response = await _http.get(
-        'http://localhost:3000/api/mpu/graph',
+        'https://l7xgct6c-3000.asse.devtunnels.ms/api/mpu/graph',
         query: {'chip_id': selectedSheep.value},
       );
 
@@ -242,7 +243,8 @@ class GyroController extends GetxController {
 
   void fetchDataTable(int page) async {
     try {
-      final response = await _http.get('http://localhost:3000/api/mpu',
+      final response = await _http.get(
+          'https://l7xgct6c-3000.asse.devtunnels.ms/api/mpu',
           query: {'page': page.toString()});
       if (response.statusCode == 200) {
         final data = response.body;

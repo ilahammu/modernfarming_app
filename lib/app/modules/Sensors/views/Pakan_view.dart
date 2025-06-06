@@ -139,57 +139,119 @@ class WeightFoodView extends GetView<WeightFoodController> {
                     if (controller.selectedSheep.value != null &&
                         controller.selectedTimeRange.value != null &&
                         controller.selectedDate.value != null) {
-                      return Column(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8.0),
-                            decoration: BoxDecoration(
-                              color: Color.fromARGB(255, 132, 137, 132),
-                              borderRadius: BorderRadius.circular(10),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey.withOpacity(0.8),
-                                  spreadRadius: 1.5,
-                                  blurRadius: 2,
-                                  offset: Offset(0, 5),
-                                ),
-                              ],
-                            ),
-                            child: Text(
-                              'Feed Chart',
-                              style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black),
-                            ),
-                          ),
-                          SizedBox(
-                            height: 10,
-                          ),
-                          Obx(() {
-                            return CustomLineChart(
-                              dataList: controller.dataList,
-                              dataType: controller.selectedTimeRange.value ==
-                                      'Monthly'
-                                  ? 'pakan'
-                                  : controller.selectedTimeRange.value ==
-                                          'Weekly'
-                                      ? 'pakan'
-                                      : 'pakan',
-                            );
-                          }),
-                          SizedBox(
-                            height: 10,
-                          ),
-                          Text(
-                            'Data for ${DateFormat('yyyy-MM-dd').format(controller.selectedDate.value!)}',
+                      if (controller.dataList.isEmpty) {
+                        return const Center(
+                          child: Text(
+                            'Tidak Ada Data',
                             style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                              color: Colors.red,
                             ),
                           ),
-                        ],
-                      );
+                        );
+                      } else {
+                        return Row(
+                          children: [
+                            Flexible(
+                              child: Container(
+                                padding: const EdgeInsets.all(8.0),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color.fromARGB(
+                                              255, 255, 255, 255)
+                                          .withOpacity(0.8),
+                                      spreadRadius: 1.5,
+                                      blurRadius: 2,
+                                      offset: Offset(0, 5),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      'Feed Chart',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: 10,
+                                    ),
+                                    Obx(() {
+                                      return CustomLineChart(
+                                        dataList: controller.dataList,
+                                        dataType: controller
+                                                    .selectedTimeRange.value ==
+                                                'Monthly'
+                                            ? 'pakan'
+                                            : controller.selectedTimeRange
+                                                        .value ==
+                                                    'Weekly'
+                                                ? 'pakan'
+                                                : 'pakan',
+                                      );
+                                    }),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 10, // Add spacing between the charts
+                            ),
+                            Flexible(
+                              child: Container(
+                                padding: const EdgeInsets.all(8.0),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color.fromARGB(
+                                              255, 255, 255, 255)
+                                          .withOpacity(0.8),
+                                      spreadRadius: 1.5,
+                                      blurRadius: 2,
+                                      offset: Offset(0, 5),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      'Raw Feed Chart',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: 10,
+                                    ),
+                                    Obx(() {
+                                      return CustomLineChart(
+                                        dataList: controller.dataList,
+                                        dataType: controller
+                                                    .selectedTimeRange.value ==
+                                                'Monthly'
+                                            ? 'pakanmentah'
+                                            : controller.selectedTimeRange
+                                                        .value ==
+                                                    'Weekly'
+                                                ? 'pakanmentah'
+                                                : 'pakanmentah',
+                                      );
+                                    }),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      }
                     } else {
                       return const Center(
                         child: Text(

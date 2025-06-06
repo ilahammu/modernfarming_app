@@ -311,10 +311,8 @@ class OverviewView extends GetView<OverviewController> {
                                   CustomCard(
                                     isColumn: true,
                                     multiple_text: 'Condition',
-                                    // ignore: unnecessary_null_comparison
-                                    multiple_text2: domba.kondisi != null
-                                        ? (domba.kondisi ? 'Sleep' : 'Awake')
-                                        : 'N/A',
+                                    multiple_text2: domba
+                                        .kondisi, // Langsung gunakan nilai dari database
                                     width: 230,
                                     height: 60,
                                   ),
@@ -485,11 +483,9 @@ class OverviewView extends GetView<OverviewController> {
                                   ),
                                   CustomCard(
                                     isColumn: true,
-                                    multiple_text: 'Kondisi',
-                                    // ignore: unnecessary_null_comparison
-                                    multiple_text2: domba.kondisi != null
-                                        ? (domba.kondisi ? 'kondisi' : 'Bangun')
-                                        : 'N/A',
+                                    multiple_text: 'Condition',
+                                    multiple_text2: domba
+                                        .kondisi, // Langsung gunakan nilai dari database
                                     width: 230,
                                     height: 60,
                                   ),

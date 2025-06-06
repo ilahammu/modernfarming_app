@@ -22,7 +22,6 @@ class CustomLineChart extends StatelessWidget {
     print('Building Chart with data: $dataList');
     return Card(
       shape: const RoundedRectangleBorder(
-        
         borderRadius: BorderRadius.all(Radius.circular(8.0)),
       ),
       child: Container(
@@ -72,6 +71,10 @@ class CustomLineChart extends StatelessWidget {
         yFrequency = 25.0;
         break;
       case 'pakan':
+        yMax = 10000.0;
+        yFrequency = 2500.0;
+        break;
+      case 'pakanmentah':
         yMax = 10000.0;
         yFrequency = 2500.0;
         break;
@@ -136,6 +139,7 @@ class CustomLineChart extends StatelessWidget {
         labelX: (value) {
           if ((dataType == 'berat' ||
                   dataType == 'pakan' ||
+                  dataType == 'pakanmentah' ||
                   dataType == 'suhu' ||
                   dataType == 'kelembapan') &&
               dataList.length == 7) {
@@ -148,6 +152,7 @@ class CustomLineChart extends StatelessWidget {
             return '$day\n$date'; // Show day and date
           } else if ((dataType == 'berat' ||
                   dataType == 'pakan' ||
+                  dataType == 'pakanmentah' ||
                   dataType == 'suhu' ||
                   dataType == 'kelembapan') &&
               dataList.length == 4) {
@@ -213,6 +218,12 @@ class CustomLineChart extends StatelessWidget {
             case 'pakan':
               value =
                   data.beratPakan != null ? data.beratPakan!.toDouble() : 0.0;
+              break;
+            case 'pakanmentah':
+              value = data.beratPakanmentah != null
+                  ? data.beratPakanmentah!.toDouble()
+                  : 0.0;
+              print("processing pakanmentah: $value");
               break;
             default:
               value = 0.0;

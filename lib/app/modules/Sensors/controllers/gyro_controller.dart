@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:monitoring_kambing/app/data/chart_model.dart';
 import 'package:monitoring_kambing/app/data/datatable_model.dart';
 
@@ -17,7 +18,7 @@ class GyroController extends GetxController {
     'X',
     'Y',
     'Z',
-    'Distance',
+    'Condition',
     'Created At',
   ].obs;
 
@@ -169,10 +170,9 @@ class GyroController extends GetxController {
           final chartModel = ChartModel(
             id: item['id'].toString(), // Ensure id is treated as String
             chipId: item['chip_id'].toString(),
-            acc_x: item['acc_x']?.toDouble() ?? 0,
-            acc_y: item['acc_y']?.toDouble() ?? 0,
-            acc_z: item['acc_z']?.toDouble() ?? 0,
-            tinggi: item['tinggi']?.toDouble() ?? 0,
+            mean_x: item['mean_x']?.toDouble() ?? 0,
+            mean_y: item['mean_y']?.toDouble() ?? 0,
+            mean_z: item['mean_z']?.toDouble() ?? 0,
             createdAt: item['createdAt'] != null
                 ? DateTime.parse(item['createdAt'])
                 : DateTime.now(),
@@ -182,26 +182,23 @@ class GyroController extends GetxController {
 
           double xValue =
               chartModel.createdAt.millisecondsSinceEpoch.toDouble();
-          newAccXData.add(FlSpot(xValue, chartModel.acc_x ?? 0));
-          newAccYData.add(FlSpot(xValue, chartModel.acc_y ?? 0));
-          newAccZData.add(FlSpot(xValue, chartModel.acc_z ?? 0));
-          newDistanceData.add(FlSpot(xValue, chartModel.tinggi ?? 0));
+          newAccXData.add(FlSpot(xValue, chartModel.mean_x ?? 0));
+          newAccYData.add(FlSpot(xValue, chartModel.mean_y ?? 0));
+          newAccZData.add(FlSpot(xValue, chartModel.mean_z ?? 0));
 
           // Update min and max values
           minXValue = xValue < minXValue ? xValue : minXValue;
           maxXValue = xValue > maxXValue ? xValue : maxXValue;
           minYValue = [
-            chartModel.acc_x ?? 0,
-            chartModel.acc_y ?? 0,
-            chartModel.acc_z ?? 0,
-            chartModel.tinggi ?? 0,
+            chartModel.mean_x ?? 0,
+            chartModel.mean_y ?? 0,
+            chartModel.mean_z ?? 0,
             minYValue
           ].reduce((a, b) => a < b ? a : b);
           maxYValue = [
-            chartModel.acc_x ?? 0,
-            chartModel.acc_y ?? 0,
-            chartModel.acc_z ?? 0,
-            chartModel.tinggi ?? 0,
+            chartModel.mean_x ?? 0,
+            chartModel.mean_y ?? 0,
+            chartModel.mean_z ?? 0,
             maxYValue
           ].reduce((a, b) => a > b ? a : b);
         }
@@ -231,6 +228,9 @@ class GyroController extends GetxController {
 
         print(
             'Data fetched and processed for chart: ${newAccXData.length} items');
+
+        // Tambahkan ini untuk memperbarui tabel
+        fetchDataTable(currentPage);
       } else {
         print('Failed to load data: ${response.statusCode}');
         throw Exception('Failed to load data');
@@ -250,17 +250,20 @@ class GyroController extends GetxController {
         final data = response.body;
         listDataTable.clear();
         for (var item in data['data']['rows']) {
+          final createdAt =
+              DateTime.parse(item['createdAt']).add(Duration(hours: 7));
           listDataTable.add(DataTableModel({
             'CHIP-ID': item['chip_id'],
             'Sheep Name': item['nama_domba'],
             'Gender': item['jenis_kelamin'],
-            'X': item['acc_x'].toString(),
-            'Y': item['acc_y'].toString(),
-            'Z': item['acc_z'].toString(),
-            'Distance': item['tinggi'].toString(),
-            'Created At': item['createdAt'],
+            'X': item['mean_x'].toString(),
+            'Y': item['mean_y'].toString(),
+            'Z': item['mean_z'].toString(),
+            'Condition': item['classification'],
+            'Created At': DateFormat('yyyy-MM-dd HH:mm').format(createdAt),
           }));
         }
+        listDataTable.refresh(); // Paksa UI untuk diperbarui
         currentPage = page;
         totalPage = data['pagination']['totalPages'];
       } else {
@@ -278,7 +281,7 @@ class GyroController extends GetxController {
     fetchGyroData();
     fetchListDomba();
     fetchDataTable(currentPage);
-    timer = Timer.periodic(Duration(seconds: 5), (Timer t) => fetchGyroData());
+    timer = Timer.periodic(Duration(seconds: 2), (Timer t) => fetchGyroData());
   }
 
   @override

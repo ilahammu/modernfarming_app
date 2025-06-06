@@ -6,9 +6,10 @@ class ChartModel {
   double? suhu;
   double? kelembaban;
   double? beratPakan;
-  double? acc_x;
-  double? acc_y;
-  double? acc_z;
+  double? beratPakanmentah;
+  double? mean_x;
+  double? mean_y;
+  double? mean_z;
   double? kondisi;
   String chipId;
 
@@ -22,10 +23,11 @@ class ChartModel {
     this.berat,
     this.suhu,
     this.beratPakan,
+    this.beratPakanmentah,
     this.kelembaban,
-    this.acc_x,
-    this.acc_y,
-    this.acc_z,
+    this.mean_x,
+    this.mean_y,
+    this.mean_z,
     this.kondisi,
     required this.createdAt,
   });

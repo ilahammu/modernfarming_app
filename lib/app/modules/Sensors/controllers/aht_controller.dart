@@ -65,9 +65,13 @@ class IndeksLingkunganController extends GetxController {
   }
 
   void handlerDropdownSheep(String? sheep) {
-    selectedSheep.value = sheep!;
-    if (selectedTimeRange.value != null && selectedDate.value != null) {
-      fetchIndeksData(); // Fetch data when a sheep is selected
+    if (sheep != null && sheep.isNotEmpty) {
+      selectedSheep.value = sheep;
+      if (selectedTimeRange.value != null && selectedDate.value != null) {
+        fetchIndeksData();
+      }
+    } else {
+      print("Invalid sheep selected: $sheep");
     }
   }
 
@@ -98,14 +102,20 @@ class IndeksLingkunganController extends GetxController {
 
         if (response.statusCode == 200) {
           final data = response.body['data']['rows'];
+          print("Data received: ${data.length} items"); // Debugging log
+
           for (var item in data) {
-            final chipId = item['id'].toString();
-            if (!seenChipIds.contains(chipId)) {
+            final chipId = item['id']?.toString();
+            if (chipId != null &&
+                chipId.isNotEmpty &&
+                !seenChipIds.contains(chipId)) {
               seenChipIds.add(chipId);
               allSheep.add({
                 'nama_domba': item['nama_domba'].toString(),
                 'chip_id': chipId,
               });
+            } else {
+              print("Invalid or duplicate chip ID: $chipId");
             }
           }
 
@@ -140,13 +150,17 @@ class IndeksLingkunganController extends GetxController {
         final Set<String> seenChipIds = {};
         sheepList.clear();
         for (var item in data) {
-          final chipId = item['chip_id'].toString();
-          if (!seenChipIds.contains(chipId)) {
+          final chipId = item['chip_id']?.toString();
+          if (chipId != null &&
+              chipId.isNotEmpty &&
+              !seenChipIds.contains(chipId)) {
             seenChipIds.add(chipId);
             sheepList.add({
               'nama_domba': item['nama_domba'].toString(),
-              'chip_id': chipId
+              'chip_id': chipId,
             });
+          } else {
+            print("Invalid or duplicate chip ID: $chipId");
           }
         }
         sheepList.sort((a, b) => a['nama_domba']!.compareTo(b['nama_domba']!));
@@ -155,6 +169,7 @@ class IndeksLingkunganController extends GetxController {
         throw Exception('Failed to load sheep list');
       }
     } catch (e) {
+      print("Error fetching sheep list: $e");
       throw Exception('Failed to fetch sheep list: $e');
     }
   }
@@ -202,7 +217,7 @@ class IndeksLingkunganController extends GetxController {
           listDataTable.add(DataTableModel({
             'CHIP-ID': item['chip_id'].toString(),
             'Suhu °C': item['suhu'].toString(),
-            'Kelembaban (%)': item['kelembabpn'].toString(),
+            'Kelembaban (%)': item['kelembabpan'].toString(),
             'Created At':
                 DateFormat('yyyy-MM-dd HH:mm').format(chartModel.createdAt),
           }));

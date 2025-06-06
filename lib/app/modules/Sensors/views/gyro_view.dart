@@ -99,7 +99,7 @@ class GyroView extends GetView<GyroController> {
                       if (controller.dataList.isEmpty) {
                         return const Center(
                           child: Text(
-                            'Isi data terlebih dahulu',
+                            'Tidak Ada Data',
                             style: TextStyle(
                               fontSize: 20,
                               color: Colors.red,
@@ -153,21 +153,6 @@ class GyroView extends GetView<GyroController> {
                                   ),
                                 ),
                                 const SizedBox(width: 20),
-                                Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Obx(() => DistanceChart(
-                                          distanceData: controller.distanceData,
-                                          minX: controller.minX.value,
-                                          maxX: controller.maxX.value,
-                                          minY: controller.minY.value,
-                                          maxY: controller.maxY.value,
-                                          xLabel: "Time",
-                                          yLabel: "Angle",
-                                          legends: ["Jarak (cm)"],
-                                        )),
-                                  ),
-                                ),
                               ],
                             ),
                           ],

@@ -140,7 +140,7 @@ class IndeksLingkunganView extends GetView<IndeksLingkunganController> {
                       if (controller.dataList.isEmpty) {
                         return const Center(
                           child: Text(
-                            'Isi data terlebih dahulu',
+                            'Tidak Ada Data',
                             style: TextStyle(
                               fontSize: 20,
                               color: Colors.red,

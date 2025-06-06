@@ -37,8 +37,8 @@ class GyroChart extends StatelessWidget {
             LineChartData(
               minX: minX,
               maxX: maxX,
-              minY: -20,
-              maxY: 20,
+              minY: -10,
+              maxY: 10,
               titlesData: FlTitlesData(
                 leftTitles: AxisTitles(
                   sideTitles: SideTitles(
@@ -66,7 +66,7 @@ class GyroChart extends StatelessWidget {
                       final DateTime date =
                           DateTime.fromMillisecondsSinceEpoch(value.toInt());
                       final String formattedDate =
-                          "${date.minute}:${date.second}";
+                          "${date.hour}:${date.minute}:${date.second}";
                       return SideTitleWidget(
                         axisSide: meta.axisSide,
                         child: Text(formattedDate),

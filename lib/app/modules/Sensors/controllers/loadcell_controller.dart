@@ -57,9 +57,13 @@ class LoadcellController extends GetxController {
   }
 
   void handlerDropdownSheep(String? sheep) {
-    selectedSheep.value = sheep!;
-    if (selectedTimeRange.value != null && selectedDate.value != null) {
-      fetchLoadcellData(); // Fetch data when a sheep is selected
+    if (sheep != null && sheep.isNotEmpty) {
+      selectedSheep.value = sheep;
+      if (selectedTimeRange.value != null && selectedDate.value != null) {
+        fetchLoadcellData();
+      }
+    } else {
+      print("Invalid sheep selected: $sheep");
     }
   }
 
@@ -100,13 +104,17 @@ class LoadcellController extends GetxController {
           print("Data received: ${data.length} items"); // Debugging log
 
           for (var item in data) {
-            final chipId = item['id'].toString();
-            if (!seenChipIds.contains(chipId)) {
+            final chipId = item['id']?.toString();
+            if (chipId != null &&
+                chipId.isNotEmpty &&
+                !seenChipIds.contains(chipId)) {
               seenChipIds.add(chipId);
               allSheep.add({
                 'nama_domba': item['nama_domba'].toString(),
                 'chip_id': chipId,
               });
+            } else {
+              print("Invalid or duplicate chip ID: $chipId");
             }
           }
 
@@ -138,13 +146,17 @@ class LoadcellController extends GetxController {
         final Set<String> seenChipIds = {};
         sheepList.clear();
         for (var item in data) {
-          final chipId = item['chip_id'].toString();
-          if (!seenChipIds.contains(chipId)) {
+          final chipId = item['chip_id']?.toString();
+          if (chipId != null &&
+              chipId.isNotEmpty &&
+              !seenChipIds.contains(chipId)) {
             seenChipIds.add(chipId);
             sheepList.add({
               'nama_domba': item['nama_domba'].toString(),
-              'chip_id': chipId
+              'chip_id': chipId,
             });
+          } else {
+            print("Invalid or duplicate chip ID: $chipId");
           }
         }
         sheepList.sort((a, b) => a['nama_domba']!.compareTo(b['nama_domba']!));
@@ -153,6 +165,7 @@ class LoadcellController extends GetxController {
         throw Exception('Failed to load sheep list');
       }
     } catch (e) {
+      print("Error fetching sheep list: $e");
       throw Exception('Failed to fetch sheep list: $e');
     }
   }
@@ -358,7 +371,7 @@ class LoadcellController extends GetxController {
 
     // Set up a timer to refresh data every 5 seconds
     timer =
-        Timer.periodic(Duration(seconds: 5), (Timer t) => fetchLoadcellData());
+        Timer.periodic(Duration(seconds: 1), (Timer t) => fetchLoadcellData());
   }
 
   @override

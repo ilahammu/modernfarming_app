@@ -29,7 +29,7 @@ class Baris {
   final double? suhu;
   final double? kelembapan;
   final double? tinggi;
-  final bool kondisi;
+  final String kondisi;
 
   Baris({
     required this.id,
@@ -47,6 +47,7 @@ class Baris {
   });
 
   factory Baris.fromJson(Map<String, dynamic> json) {
+    print("Data JSON: $json"); // Tambahkan log untuk memeriksa data JSON
     return Baris(
       id: json['id'] ?? '',
       namaDomba: json['nama_domba'] ?? '',
@@ -69,7 +70,8 @@ class Baris {
       tinggi: json['tinggi'] != null
           ? double.tryParse(json['tinggi'].toString())
           : null,
-      kondisi: json['kondisi'] == 1 || json['kondisi'] == true,
+      kondisi: json['classification']?.toString() ??
+          'N/A', // Ambil nilai string dari JSON
     );
   }
 }

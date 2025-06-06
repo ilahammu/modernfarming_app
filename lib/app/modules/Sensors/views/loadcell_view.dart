@@ -139,41 +139,14 @@ class LoadcellView extends GetView<LoadcellController> {
                         controller.selectedTimeRange.value != null &&
                         controller.selectedDate.value != null) {
                       if (controller.dataList.isEmpty) {
-                        return Column(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8.0),
-                              decoration: BoxDecoration(
-                                color: Color.fromARGB(255, 132, 137, 132),
-                                borderRadius: BorderRadius.circular(10),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.grey.withOpacity(0.8),
-                                    spreadRadius: 1.5,
-                                    blurRadius: 2,
-                                    offset: Offset(0, 5),
-                                  ),
-                                ],
-                              ),
-                              child: Text(
-                                'Grafik Berat',
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black),
-                              ),
+                        return const Center(
+                          child: Text(
+                            'Tidak Ada Data',
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.red,
                             ),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            Text(
-                              'Data for ${DateFormat('yyyy-MM-dd').format(controller.selectedDate.value!)}',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
+                          ),
                         );
                       } else {
                         return Column(
@@ -193,7 +166,7 @@ class LoadcellView extends GetView<LoadcellController> {
                                 ],
                               ),
                               child: Text(
-                                'Weight Chart',
+                                'Grafik Berat',
                                 style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,

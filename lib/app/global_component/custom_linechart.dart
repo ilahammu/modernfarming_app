@@ -206,23 +206,22 @@ class CustomLineChart extends StatelessWidget {
           double value;
           switch (dataType) {
             case 'suhu':
-              value = data.suhu != null ? data.suhu!.toDouble() : 0.0;
+              value = data.suhu != null ? data.suhu!.toDouble() : 0;
               break;
             case 'kelembapan':
-              value =
-                  data.kelembaban != null ? data.kelembaban!.toDouble() : 0.0;
+              value = data.kelembaban != null ? data.kelembaban!.toDouble() : 0;
               break;
             case 'berat':
-              value = data.berat != null ? data.berat!.toDouble() : 0.0;
+              value = data.berat != null ? data.berat!.toDouble() : 0;
               break;
             case 'pakan':
-              value =
-                  data.beratPakan != null ? data.beratPakan!.toDouble() : 0.0;
+              value = data.beratPakan != null ? data.beratPakan!.toDouble() : 0;
+              print("processing pakan: $value");
               break;
             case 'pakanmentah':
               value = data.beratPakanmentah != null
                   ? data.beratPakanmentah!.toDouble()
-                  : 0.0;
+                  : 0;
               print("processing pakanmentah: $value");
               break;
             default:

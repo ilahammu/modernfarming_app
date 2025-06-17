@@ -205,6 +205,9 @@ class WeightFoodController extends GetxController {
             beratPakan: item['berat_pakan'] is double
                 ? item['berat_pakan']
                 : double.tryParse(item['berat_pakan'].toString()) ?? 0.0,
+            beratPakanmentah: item['berat_pakan_mentah'] is double
+                ? item['berat_pakan_mentah']
+                : double.tryParse(item['berat_pakan_mentah'].toString()) ?? 0.0,
             chipId: item['chip_id'].toString(),
             createdAt:
                 DateTime.parse(item['createdAt']).add(Duration(hours: 7)),

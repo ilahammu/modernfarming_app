@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import 'package:monitoring_kambing/app/global_component/custom_dropdown.dart';
 import 'package:monitoring_kambing/app/global_component/custom_button.dart';
 import 'package:monitoring_kambing/app/global_component/custom_datatable.dart';

@@ -96,7 +96,7 @@ class IndeksLingkunganController extends GetxController {
 
       while (true) {
         final response = await _http.get(
-          'https://l7xgct6c-3000.asse.devtunnels.ms/api/chip',
+          'https://modernfarming-api.vercel.app/api/chip',
           query: {'page': page.toString()},
         );
 
@@ -144,7 +144,7 @@ class IndeksLingkunganController extends GetxController {
   void fetchListDomba() async {
     try {
       final response =
-          await _http.get('https://l7xgct6c-3000.asse.devtunnels.ms/api/chip');
+          await _http.get('https://modernfarming-api.vercel.app/api/chip');
       if (response.statusCode == 200) {
         final data = response.body['data']['rows'];
         final Set<String> seenChipIds = {};
@@ -181,7 +181,7 @@ class IndeksLingkunganController extends GetxController {
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
       final String url =
-          'https://l7xgct6c-3000.asse.devtunnels.ms/api/aht/daily/$formattedDate/$chipId';
+          'https://modernfarming-api.vercel.app/api/aht/daily/$formattedDate/$chipId';
       print(url);
       final response = await _http.get(url);
 
@@ -243,7 +243,7 @@ class IndeksLingkunganController extends GetxController {
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
       final String url =
-          'https://l7xgct6c-3000.asse.devtunnels.ms/api/aht/weekly/$formattedDate/$chipId';
+          'https://modernfarming-api.vercel.app/api/aht/weekly/$formattedDate/$chipId';
       print(url);
       final response = await _http.get(url);
 
@@ -298,7 +298,7 @@ class IndeksLingkunganController extends GetxController {
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
       final String url =
-          'https://l7xgct6c-3000.asse.devtunnels.ms/api/aht/monthly/$formattedDate/$chipId';
+          'https://modernfarming-api.vercel.app/api/aht/monthly/$formattedDate/$chipId';
       print(url);
       final response = await _http.get(url);
 
@@ -370,7 +370,7 @@ class IndeksLingkunganController extends GetxController {
   void fetchDataTable(int page) async {
     try {
       final response = await _http.get(
-          'https://l7xgct6c-3000.asse.devtunnels.ms/api/aht',
+          'https://modernfarming-api.vercel.app/api/aht',
           query: {'page': page.toString()});
       if (response.statusCode == 200) {
         final data = response.body;

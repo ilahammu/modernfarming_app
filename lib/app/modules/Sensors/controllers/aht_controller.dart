@@ -6,6 +6,7 @@ import 'package:monitoring_kambing/app/data/chart_model.dart';
 import 'package:monitoring_kambing/app/data/datatable_model.dart';
 import 'package:monitoring_kambing/app/data/datatable_model_month.dart';
 import 'package:monitoring_kambing/app/data/datatable_model_week.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import package dotenv
 
 class IndeksLingkunganController extends GetxController {
   Timer? timer;
@@ -60,6 +61,38 @@ class IndeksLingkunganController extends GetxController {
   var isFetching = false.obs;
   var isLoading = true.obs; // Tambahkan indikator loading
 
+  // --- Tambahkan variabel untuk base URL dan endpoint dari .env ---
+  late String _baseUrl;
+  late String _chipEndpoint;
+  late String _ahtEndpoint;
+  late String _ahtDailyEndpoint;
+  late String _ahtWeeklyEndpoint;
+  late String _ahtMonthlyEndpoint;
+
+  @override
+  void onInit() {
+    super.onInit();
+    // Inisialisasi variabel dari .env
+    _baseUrl = dotenv.env['BASE_URL']!;
+    _chipEndpoint = dotenv.env['CHIP_ENDPOINT']!;
+    _ahtEndpoint = dotenv.env['AHT_ENDPOINT']!;
+    _ahtDailyEndpoint = dotenv.env['AHT_DAILY_ENDPOINT']!;
+    _ahtWeeklyEndpoint = dotenv.env['AHT_WEEKLY_ENDPOINT']!;
+    _ahtMonthlyEndpoint = dotenv.env['AHT_MONTHLY_ENDPOINT']!;
+
+    tanggalLahirController = TextEditingController();
+    fetchSheepData();
+    fetchListDomba();
+    fetchIndeksData();
+    // fetch data
+    fetchDailyData(DateTime.now());
+    fetchWeeklyData(DateTime.now());
+    fetchMonthlyData(DateTime.now());
+    fetchDataTable(currentPage);
+    timer = Timer.periodic(const Duration(seconds: 5),
+        (Timer t) => fetchIndeksData()); // Gunakan const Duration
+  }
+
   void handlerSwitch(bool value) {
     isFetching.value = value;
   }
@@ -95,8 +128,9 @@ class IndeksLingkunganController extends GetxController {
       final List<Map<String, String>> allSheep = [];
 
       while (true) {
+        // --- Gunakan variabel dari .env di sini ---
         final response = await _http.get(
-          'https://modernfarming-api.vercel.app/api/chip',
+          '$_baseUrl$_chipEndpoint',
           query: {'page': page.toString()},
         );
 
@@ -143,8 +177,8 @@ class IndeksLingkunganController extends GetxController {
 
   void fetchListDomba() async {
     try {
-      final response =
-          await _http.get('https://modernfarming-api.vercel.app/api/chip');
+      // --- Gunakan variabel dari .env di sini ---
+      final response = await _http.get('$_baseUrl$_chipEndpoint');
       if (response.statusCode == 200) {
         final data = response.body['data']['rows'];
         final Set<String> seenChipIds = {};
@@ -180,8 +214,8 @@ class IndeksLingkunganController extends GetxController {
       final String formattedDate =
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
-      final String url =
-          'https://modernfarming-api.vercel.app/api/aht/daily/$formattedDate/$chipId';
+      // --- Gunakan variabel dari .env di sini ---
+      final String url = '$_baseUrl$_ahtDailyEndpoint/$formattedDate/$chipId';
       print(url);
       final response = await _http.get(url);
 
@@ -191,8 +225,11 @@ class IndeksLingkunganController extends GetxController {
         final data = response.body['data'];
         print('Decoded data: $data');
 
-        if (data.isEmpty) {
+        if (data == null || data.isEmpty) {
+          // Tambah pengecekan null
           print('No data returned');
+          listDataTable.clear(); // Bersihkan list jika tidak ada data
+          dataList.clear(); // Bersihkan chart data jika tidak ada data
           return; // Exit if no data
         }
 
@@ -210,14 +247,15 @@ class IndeksLingkunganController extends GetxController {
                 ? item['kelembapan']
                 : double.tryParse(item['kelembapan'].toString()) ?? 0.0,
             chipId: item['chip_id'],
-            createdAt:
-                DateTime.parse(item['createdAt']).add(Duration(hours: 7)),
+            createdAt: DateTime.parse(item['createdAt'])
+                .add(const Duration(hours: 7)), // Gunakan const Duration
           );
 
           listDataTable.add(DataTableModel({
             'CHIP-ID': item['chip_id'].toString(),
             'Suhu °C': item['suhu'].toString(),
-            'Kelembaban (%)': item['kelembabpan'].toString(),
+            'Kelembaban (%)': item['kelembapan']
+                .toString(), // Perbaikan typo: 'kelembabpan' menjadi 'kelembapan'
             'Created At':
                 DateFormat('yyyy-MM-dd HH:mm').format(chartModel.createdAt),
           }));
@@ -242,8 +280,8 @@ class IndeksLingkunganController extends GetxController {
       final String formattedDate =
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
-      final String url =
-          'https://modernfarming-api.vercel.app/api/aht/weekly/$formattedDate/$chipId';
+      // --- Gunakan variabel dari .env di sini ---
+      final String url = '$_baseUrl$_ahtWeeklyEndpoint/$formattedDate/$chipId';
       print(url);
       final response = await _http.get(url);
 
@@ -251,11 +289,15 @@ class IndeksLingkunganController extends GetxController {
 
       if (response.statusCode == 200) {
         final data = response.body as Map<String, dynamic>;
-        final List<dynamic> dataList = data['data'];
-        print('Decoded data: $dataList');
+        final List<dynamic> dataListResponse =
+            data['data']; // Perbaiki nama variabel
+        print('Decoded data: $dataListResponse');
 
-        if (dataList.isEmpty) {
+        if (dataListResponse == null || dataListResponse.isEmpty) {
+          // Tambah pengecekan null
           print('No data returned');
+          listDataTableWeek.clear(); // Bersihkan list jika tidak ada data
+          this.dataList.clear(); // Bersihkan chart data jika tidak ada data
           return; // Exit if no data
         }
 
@@ -264,7 +306,7 @@ class IndeksLingkunganController extends GetxController {
 
         // Ensure we have exactly 7 data points, centered around the selected date
         final List<ChartModel> limitedWeeklyData = [];
-        for (var item in dataList) {
+        for (var item in dataListResponse) {
           final chartModel = ChartModel(
             id: item['date'], // Handle id as String
             suhu: item['averageSuhu'] is double
@@ -281,6 +323,7 @@ class IndeksLingkunganController extends GetxController {
 
         // Update the data list for the chart
         this.dataList.addAll(limitedWeeklyData);
+        dataList.refresh(); // Refresh chart data
       } else {
         print('Failed to load data: ${response.statusCode}');
         throw Exception('Failed to load data');
@@ -297,19 +340,22 @@ class IndeksLingkunganController extends GetxController {
       final String formattedDate =
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
-      final String url =
-          'https://modernfarming-api.vercel.app/api/aht/monthly/$formattedDate/$chipId';
+      // --- Gunakan variabel dari .env di sini ---
+      final String url = '$_baseUrl$_ahtMonthlyEndpoint/$formattedDate/$chipId';
       print(url);
       final response = await _http.get(url);
 
       print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
+        // Asumsi monthlyDataResponseFromJson sudah ada dan sesuai
         final data = monthlyDataResponseFromJson(response.bodyString!);
         print('Decoded data: $data');
 
         if (data.averageValues.isEmpty) {
           print('No average values returned');
+          listDataTableMonth.clear(); // Bersihkan list jika tidak ada data
+          dataList.clear(); // Bersihkan chart data jika tidak ada data
           return; // Exit if no average values
         }
 
@@ -322,15 +368,17 @@ class IndeksLingkunganController extends GetxController {
           final avgKelembapan = item.avgKelembapan;
 
           final chartModel = ChartModel(
-            id: item.week.toString(),
+            id: item.week
+                .toString(), // Asumsi 'week' adalah ID yang relevan untuk monthly data
             suhu: avgSuhu,
             kelembaban: avgKelembapan,
             chipId: chipId,
-            createdAt: selectedDate,
+            createdAt: selectedDate, // Atau gunakan item.createdAt jika ada
           );
 
           listDataTableMonth.add(DataTableModelMonth({
-            chartModel.id.toString(): avgSuhu,
+            chartModel.id.toString():
+                avgSuhu, // Anda bisa sesuaikan ini jika ingin menampilkan kedua suhu dan kelembaban di tabel
           }));
 
           dataList.add(chartModel);
@@ -349,8 +397,11 @@ class IndeksLingkunganController extends GetxController {
 
   void fetchIndeksData() async {
     try {
-      if (selectedSheep.value == null || selectedDate.value == null)
+      if (selectedSheep.value == null || selectedDate.value == null) {
+        print(
+            "No sheep or date selected for environment index data."); // Tambah log
         return; // Check if no sheep or date is selected
+      }
 
       final String timeRange = selectedTimeRange.value ?? 'Daily';
 
@@ -358,56 +409,45 @@ class IndeksLingkunganController extends GetxController {
         await fetchDailyData(selectedDate.value!);
       } else if (timeRange == 'Weekly') {
         await fetchWeeklyData(selectedDate.value!);
-      } else if (timeRange == 'Weekly') {
+      } else if (timeRange == 'Monthly') {
+        // Perbaikan: sebelumnya ada dua 'Weekly'
         await fetchMonthlyData(selectedDate.value!);
       }
     } catch (e) {
-      print('Error fetching data: $e');
+      print('Error in fetchIndeksData: $e'); // Perbaiki log
       throw Exception('Failed to fetch data');
     }
   }
 
   void fetchDataTable(int page) async {
     try {
-      final response = await _http.get(
-          'https://modernfarming-api.vercel.app/api/aht',
-          query: {'page': page.toString()});
+      // --- Gunakan variabel dari .env di sini ---
+      final response = await _http
+          .get('$_baseUrl$_ahtEndpoint', query: {'page': page.toString()});
       if (response.statusCode == 200) {
         final data = response.body;
         listDataTable.clear();
         for (var item in data['data']['rows']) {
+          final createdAt = DateTime.parse(item['createdAt'])
+              .add(const Duration(hours: 7)); // Gunakan const Duration
           listDataTable.add(DataTableModel({
             'CHIP-ID': item['chip_id'].toString(),
             'Suhu °C': item['suhu']?.toString(),
-            'Kelembaban (%)': item['kelembaban']?.toString(),
-            'Created At': item['createdAt']?.toString(),
+            'Kelembaban (%)': item['kelembapan']?.toString(),
+            'Created At': DateFormat('yyyy-MM-dd HH:mm')
+                .format(createdAt), // Format tanggal untuk tampilan
           }));
         }
         currentPage = page;
         totalPage = response.body['pagination']['totalPages'];
       } else {
+        print('Failed to load table data: ${response.statusCode}');
         throw Exception('Failed to load data');
       }
     } catch (e) {
-      print('Error fetching data: $e');
+      print('Error fetching table data: $e');
       throw Exception('Failed to fetch data');
     }
-  }
-
-  @override
-  void onInit() {
-    super.onInit();
-    fetchSheepData();
-    fetchListDomba();
-    tanggalLahirController = TextEditingController();
-    fetchIndeksData();
-    // fetch data
-    fetchDailyData(DateTime.now());
-    fetchWeeklyData(DateTime.now());
-    fetchMonthlyData(DateTime.now());
-    fetchDataTable(currentPage);
-    timer =
-        Timer.periodic(Duration(seconds: 5), (Timer t) => fetchIndeksData());
   }
 
   @override
@@ -424,6 +464,7 @@ class IndeksLingkunganController extends GetxController {
     tanggalLahirController.clear();
     listDataTable.clear();
     listDataTableWeek.clear();
+    listDataTableMonth.clear(); // Perbaikan: tambahkan ()
     dataList.clear();
     fetchSheepData();
     fetchIndeksData();

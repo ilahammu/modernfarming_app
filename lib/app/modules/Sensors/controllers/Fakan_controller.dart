@@ -6,6 +6,9 @@ import 'package:monitoring_kambing/app/data/chart_model.dart';
 import 'package:monitoring_kambing/app/data/datatable_model.dart';
 import 'package:monitoring_kambing/app/data/datatable_model_month.dart';
 import 'package:monitoring_kambing/app/data/datatable_model_week.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+// ==========================================================================================================================================
 
 class WeightFoodController extends GetxController {
   Timer? timer;
@@ -39,7 +42,6 @@ class WeightFoodController extends GetxController {
     }
   }
 
-  // list of data table,sheep,and ist for dropdown
   final RxList<DataTableModel> listDataTable = <DataTableModel>[].obs;
   final RxList<DataTableModelMonth> listDataTableMonth =
       <DataTableModelMonth>[].obs;
@@ -47,16 +49,44 @@ class WeightFoodController extends GetxController {
       <DataTableModelWeek>[].obs;
   final RxList<ChartModel> dataList = <ChartModel>[].obs;
 
-  // for pick sheep and range time
   final Rx<String?> selectedSheep = Rx<String?>(null);
   final Rx<String?> selectedTimeRange = Rx<String?>(null);
 
-  // Membuat variabel sheepList yang berisi list dari Map<String, String>
   final RxList<Map<String, String>> sheepList = <Map<String, String>>[].obs;
 
   var selectedHistory = "Current".obs;
   var isFetching = false.obs;
   var isLoading = true.obs;
+
+  late String _baseUrl;
+  late String _chipEndpoint;
+  late String _pakanEndpoint;
+  late String _pakanDailyEndpoint;
+  late String _pakanWeeklyEndpoint;
+  late String _pakanMonthlyEndpoint;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _baseUrl = dotenv.env['API_BASE_URL']!;
+    _chipEndpoint = dotenv.env['API_CHIP_ENDPOINT']!;
+    _pakanEndpoint = dotenv.env['API_PAKAN_ENDPOINT']!;
+    _pakanDailyEndpoint = dotenv.env['API_PAKAN_DAILY_ENDPOINT']!;
+    _pakanWeeklyEndpoint = dotenv.env['API_PAKAN_WEEKLY_ENDPOINT']!;
+    _pakanMonthlyEndpoint = dotenv.env['API_PAKAN_MONTHLY_ENDPOINT']!;
+
+    tanggalLahirController = TextEditingController();
+    fetchSheepData();
+    fetchLoadcellPakanData();
+    fetchDailyData(DateTime.now());
+    fetchWeeklyData(DateTime.now());
+    fetchMonthlyData(DateTime.now());
+    fetchListDomba();
+    fetchDataTable(currentPage);
+
+    timer = Timer.periodic(
+        const Duration(seconds: 1), (Timer t) => fetchLoadcellPakanData());
+  }
 
   void handlerSwitch(bool value) {
     isFetching.value = value;
@@ -85,7 +115,8 @@ class WeightFoodController extends GetxController {
     selectedHistory.value = history!;
   }
 
-  // Fetch data for the dropdown
+// ==========================================================================================================================================
+
   Future<void> fetchSheepData() async {
     isLoading.value = true;
     try {
@@ -95,13 +126,13 @@ class WeightFoodController extends GetxController {
 
       while (true) {
         final response = await _http.get(
-          'https://modernfarming-api.vercel.app/api/chip',
+          '$_baseUrl$_chipEndpoint',
           query: {'page': page.toString()},
         );
 
         if (response.statusCode == 200) {
           final data = response.body['data']['rows'];
-          print("Data received: ${data.length} items"); // Debugging log
+          print("Data received: ${data.length} items");
 
           for (var item in data) {
             final chipId = item['id']?.toString();
@@ -126,12 +157,11 @@ class WeightFoodController extends GetxController {
         }
       }
 
-      sheepList.assignAll(allSheep); // Perbarui daftar dropdown
-      sheepList.refresh(); // Paksa UI diperbarui
+      sheepList.assignAll(allSheep);
+      sheepList.refresh();
 
-      // Hanya set default jika belum ada yang dipilih sebelumnya
       if (selectedSheep.value == null && allSheep.isNotEmpty) {
-        selectedSheep.value = null; // Pastikan tetap null agar hint muncul
+        selectedSheep.value = null;
       }
     } catch (e) {
       print("Error fetching sheep data: $e");
@@ -140,10 +170,11 @@ class WeightFoodController extends GetxController {
     }
   }
 
+// ==========================================================================================================================================
+
   void fetchListDomba() async {
     try {
-      final response =
-          await _http.get('https://modernfarming-api.vercel.app/api/chip');
+      final response = await _http.get('$_baseUrl$_chipEndpoint');
       if (response.statusCode == 200) {
         final data = response.body['data']['rows'];
         final Set<String> seenChipIds = {};
@@ -173,16 +204,17 @@ class WeightFoodController extends GetxController {
     }
   }
 
+// ==========================================================================================================================================
+
   Future<void> fetchDailyData(DateTime selectedDate) async {
     try {
       print('Fetching daily data...');
       final String formattedDate =
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
-      final String url =
-          'https://modernfarming-api.vercel.app/api/loadcellpakan/daily/$formattedDate/$chipId';
+      final String url = '$_pakanDailyEndpoint/$formattedDate/$chipId';
       print(url);
-      final response = await _http.get(url);
+      final response = await _http.get('$_baseUrl$url');
 
       print('Response body: ${response.body}');
 
@@ -190,9 +222,11 @@ class WeightFoodController extends GetxController {
         final data = response.body['data'];
         print('Decoded data: $data');
 
-        if (data.isEmpty) {
+        if (data == null || data.isEmpty) {
           print('No data returned');
-          return; // Exit if no data
+          listDataTable.clear();
+          dataList.clear();
+          return;
         }
 
         listDataTable.clear();
@@ -201,7 +235,7 @@ class WeightFoodController extends GetxController {
         for (var item in data) {
           print('Processing item: $item');
           final chartModel = ChartModel(
-            id: item['id'].toString(), // Handle id as String
+            id: item['id'].toString(),
             beratPakan: item['berat_pakan'] is double
                 ? item['berat_pakan']
                 : double.tryParse(item['berat_pakan'].toString()) ?? 0.0,
@@ -210,12 +244,13 @@ class WeightFoodController extends GetxController {
                 : double.tryParse(item['berat_pakan_mentah'].toString()) ?? 0.0,
             chipId: item['chip_id'].toString(),
             createdAt:
-                DateTime.parse(item['createdAt']).add(Duration(hours: 7)),
+                DateTime.parse(item['createdAt']).add(const Duration(hours: 7)),
           );
 
           listDataTable.add(DataTableModel({
             'CHIP-ID': item['chip_id'].toString(),
             'Food Weight (Gram)': item['berat_pakan'].toString(),
+            'Raw Food Weight (Gram)': item['berat_pakan_mentah'].toString(),
             'Created At':
                 DateFormat('yyyy-MM-dd HH:mm').format(chartModel.createdAt),
           }));
@@ -240,31 +275,31 @@ class WeightFoodController extends GetxController {
       final String formattedDate =
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
-      final String url =
-          'https://modernfarming-api.vercel.app/api/loadcellpakan/weekly/$formattedDate/$chipId';
+      final String url = '$_pakanWeeklyEndpoint/$formattedDate/$chipId';
       print(url);
-      final response = await _http.get(url);
+      final response = await _http.get('$_baseUrl$url');
 
       print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = response.body as Map<String, dynamic>;
-        final List<dynamic> dataList = data['data'];
-        print('Decoded data: $dataList');
+        final List<dynamic> dataListResponse = data['data'];
+        print('Decoded data: $dataListResponse');
 
-        if (dataList.isEmpty) {
+        if (dataListResponse == null || dataListResponse.isEmpty) {
           print('No data returned');
-          return; // Exit if no data
+          listDataTableWeek.clear();
+          this.dataList.clear();
+          return;
         }
 
         listDataTableWeek.clear();
         this.dataList.clear();
 
-        // Ensure we have exactly 7 data points, centered around the selected date
         final List<ChartModel> limitedWeeklyData = [];
-        for (var item in dataList) {
+        for (var item in dataListResponse) {
           final chartModel = ChartModel(
-            id: item['date'], // Handle id as String
+            id: item['date'],
             beratPakan: item['averagePakan'] is double
                 ? item['averagePakan']
                 : double.tryParse(item['averagePakan'].toString()) ?? 0.0,
@@ -274,8 +309,8 @@ class WeightFoodController extends GetxController {
           limitedWeeklyData.add(chartModel);
         }
 
-        // Update the data list for the chart
         this.dataList.addAll(limitedWeeklyData);
+        dataList.refresh();
       } else {
         print('Failed to load data: ${response.statusCode}');
         throw Exception('Failed to load data');
@@ -292,10 +327,9 @@ class WeightFoodController extends GetxController {
       final String formattedDate =
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
-      final String url =
-          'https://modernfarming-api.vercel.app/api/loadcellpakan/monthly/$formattedDate/$chipId';
+      final String url = '$_pakanMonthlyEndpoint/$formattedDate/$chipId';
       print(url);
-      final response = await _http.get(url);
+      final response = await _http.get('$_baseUrl$url');
 
       print('Response body: ${response.body}');
 
@@ -305,7 +339,9 @@ class WeightFoodController extends GetxController {
 
         if (data.averageValues.isEmpty) {
           print('No average values returned');
-          return; // Exit if no average values
+          listDataTableMonth.clear();
+          dataList.clear();
+          return;
         }
 
         listDataTableMonth.clear();
@@ -340,10 +376,14 @@ class WeightFoodController extends GetxController {
     }
   }
 
+// ==========================================================================================================================================
+
   void fetchLoadcellPakanData() async {
     try {
-      if (selectedSheep.value == null || selectedDate.value == null)
-        return; // Check if no sheep or date is selected
+      if (selectedSheep.value == null || selectedDate.value == null) {
+        print("No sheep or date selected for Loadcell Pakan data.");
+        return;
+      }
 
       final String timeRange = selectedTimeRange.value ?? 'Daily';
 
@@ -355,23 +395,22 @@ class WeightFoodController extends GetxController {
         await fetchMonthlyData(selectedDate.value!);
       }
     } catch (e) {
-      print('Error fetching data: $e');
+      print('Error in fetchLoadcellPakanData: $e');
       throw Exception('Failed to fetch data');
     }
   }
 
   void fetchDataTable(int page) async {
     try {
-      final response = await _http.get(
-          'https://modernfarming-api.vercel.app/api/loadcellpakan',
-          query: {'page': page.toString()});
+      final response = await _http
+          .get('$_baseUrl$_pakanEndpoint', query: {'page': page.toString()});
       if (response.statusCode == 200) {
         final data = response.body['data']['rows'];
         listDataTable.clear();
         print(response.body);
         for (var item in data) {
           final createdAt =
-              DateTime.parse(item['createdAt']).add(Duration(hours: 7));
+              DateTime.parse(item['createdAt']).add(const Duration(hours: 7));
           listDataTable.add(DataTableModel({
             'CHIP-ID': item['chip_id'].toString(),
             'Sheep Name': item['nama_domba'].toString(),
@@ -391,22 +430,7 @@ class WeightFoodController extends GetxController {
     }
   }
 
-  @override
-  void onInit() {
-    super.onInit();
-    tanggalLahirController = TextEditingController();
-    fetchSheepData();
-    fetchLoadcellPakanData();
-    fetchDailyData(DateTime.now());
-    fetchWeeklyData(DateTime.now());
-    fetchMonthlyData(DateTime.now());
-    fetchListDomba();
-    fetchDataTable(currentPage);
-
-    // Set up a timer to refresh data every 5 seconds
-    timer = Timer.periodic(
-        Duration(seconds: 15), (Timer t) => fetchLoadcellPakanData());
-  }
+// ==========================================================================================================================================
 
   @override
   void dispose() {
@@ -422,14 +446,13 @@ class WeightFoodController extends GetxController {
     tanggalLahirController.clear();
     listDataTable.clear();
     listDataTableWeek.clear();
+    listDataTableMonth.clear;
     dataList.clear();
     fetchSheepData();
     fetchLoadcellPakanData();
-    // Fetch data
     fetchDailyData(DateTime.now());
     fetchWeeklyData(DateTime.now());
     fetchMonthlyData(DateTime.now());
-    // fetch list domba dan data
     fetchListDomba();
     fetchDataTable(currentPage);
   }

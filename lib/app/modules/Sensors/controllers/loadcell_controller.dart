@@ -6,6 +6,7 @@ import 'package:monitoring_kambing/app/data/chart_model.dart';
 import 'package:monitoring_kambing/app/data/datatable_model.dart';
 import 'package:monitoring_kambing/app/data/datatable_model_month.dart';
 import 'package:monitoring_kambing/app/data/datatable_model_week.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class LoadcellController extends GetxController {
   Timer? timer;
@@ -21,7 +22,6 @@ class LoadcellController extends GetxController {
     'Created At',
   ].obs;
 
-  // Meemilih domba sesuoi tanggal
   late TextEditingController tanggalLahirController;
 
   Rx<DateTime?> selectedDate = Rx<DateTime?>(null);
@@ -33,7 +33,6 @@ class LoadcellController extends GetxController {
     }
   }
 
-  // list of data table,sheep,and ist for dropdown
   final RxList<DataTableModel> listDataTable = <DataTableModel>[].obs;
   final RxList<DataTableModelMonth> listDataTableMonth =
       <DataTableModelMonth>[].obs;
@@ -41,16 +40,44 @@ class LoadcellController extends GetxController {
       <DataTableModelWeek>[].obs;
   final RxList<ChartModel> dataList = <ChartModel>[].obs;
 
-  // for pick sheep and range time
   final Rx<String?> selectedSheep = Rx<String?>(null);
   final Rx<String?> selectedTimeRange = Rx<String?>(null);
 
-  // Membuat variabel sheepList yang berisi list dari Map<String, String>
   final RxList<Map<String, String>> sheepList = <Map<String, String>>[].obs;
 
   var selectedHistory = "Current".obs;
   var isFetching = false.obs;
   var isLoading = true.obs;
+
+  late String _apiBaseUrl;
+  late String _apiChipEndpoint;
+  late String _apiLoadcellEndpoint;
+  late String _apiLoadcellDailyEndpoint;
+  late String _apiLoadcellWeeklyEndpoint;
+  late String _apiLoadcellMonthlyEndpoint;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _apiBaseUrl = dotenv.env['API_BASE_URL']!;
+    _apiChipEndpoint = dotenv.env['API_CHIP_ENDPOINT']!;
+    _apiLoadcellEndpoint = dotenv.env['API_LOADCELL_ENDPOINT']!;
+    _apiLoadcellDailyEndpoint = dotenv.env['API_LOADCELL_DAILY_ENDPOINT']!;
+    _apiLoadcellWeeklyEndpoint = dotenv.env['API_LOADCELL_WEEKLY_ENDPOINT']!;
+    _apiLoadcellMonthlyEndpoint = dotenv.env['API_LOADCELL_MONTHLY_ENDPOINT']!;
+
+    tanggalLahirController = TextEditingController();
+    fetchSheepData();
+    fetchLoadcellData();
+    fetchDailyData(DateTime.now());
+    fetchWeeklyData(DateTime.now());
+    fetchMonthlyData(DateTime.now());
+    fetchListDomba();
+    fetchDataTable(currentPage);
+
+    timer = Timer.periodic(
+        const Duration(seconds: 1), (Timer t) => fetchLoadcellData());
+  }
 
   void handlerSwitch(bool value) {
     isFetching.value = value;
@@ -93,15 +120,13 @@ class LoadcellController extends GetxController {
       final List<Map<String, String>> allSheep = [];
 
       while (true) {
-        print("Fetching page: $page"); // Debugging log
         final response = await _http.get(
-          'https://modernfarming-api.vercel.app/api/chip',
+          '$_apiBaseUrl$_apiChipEndpoint',
           query: {'page': page.toString()},
         );
 
         if (response.statusCode == 200) {
           final data = response.body['data']['rows'];
-          print("Data received: ${data.length} items"); // Debugging log
 
           for (var item in data) {
             final chipId = item['id']?.toString();
@@ -123,13 +148,12 @@ class LoadcellController extends GetxController {
           page++;
         } else {
           print("Error fetching page $page: ${response.statusCode}");
-          break; // Jangan loop terus jika ada error
+          break;
         }
       }
 
       sheepList.assignAll(allSheep);
       sheepList.refresh();
-      print("Final sheep list: $sheepList");
     } catch (e) {
       print("Error fetching sheep data: $e");
     } finally {
@@ -139,8 +163,7 @@ class LoadcellController extends GetxController {
 
   void fetchListDomba() async {
     try {
-      final response =
-          await _http.get('https://modernfarming-api.vercel.app/api/chip');
+      final response = await _http.get('$_apiBaseUrl$_apiChipEndpoint');
       if (response.statusCode == 200) {
         final data = response.body['data']['rows'];
         final Set<String> seenChipIds = {};
@@ -160,7 +183,6 @@ class LoadcellController extends GetxController {
           }
         }
         sheepList.sort((a, b) => a['nama_domba']!.compareTo(b['nama_domba']!));
-        print("Sheep list: $sheepList");
       } else {
         throw Exception('Failed to load sheep list');
       }
@@ -172,8 +194,10 @@ class LoadcellController extends GetxController {
 
   void fetchLoadcellData() async {
     try {
-      if (selectedSheep.value == null || selectedDate.value == null)
-        return; // Check if no sheep or date is selected
+      if (selectedSheep.value == null || selectedDate.value == null) {
+        print("No sheep or date selected for Loadcell data.");
+        return;
+      }
 
       final String timeRange = selectedTimeRange.value ?? 'Daily';
 
@@ -185,6 +209,7 @@ class LoadcellController extends GetxController {
         await fetchMonthlyData(selectedDate.value!);
       }
     } catch (e) {
+      print('Error in fetchLoadcellData: $e');
       throw Exception('Failed to fetch data');
     }
   }
@@ -195,14 +220,16 @@ class LoadcellController extends GetxController {
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
       final String url =
-          'https://modernfarming-api.vercel.app/api/loadcellbadan/daily/$formattedDate/$chipId';
+          '$_apiBaseUrl$_apiLoadcellDailyEndpoint/$formattedDate/$chipId';
       final response = await _http.get(url);
 
       if (response.statusCode == 200) {
         final data = response.body['data'];
 
-        if (data.isEmpty) {
-          return; // Exit if no data
+        if (data == null || data.isEmpty) {
+          listDataTable.clear();
+          dataList.clear();
+          return;
         }
 
         listDataTable.clear();
@@ -210,16 +237,15 @@ class LoadcellController extends GetxController {
 
         for (var item in data) {
           final chartModel = ChartModel(
-            id: item['id'].toString(), // Handle id as String
+            id: item['id'].toString(),
             berat: item['berat'] is double
                 ? item['berat']
                 : double.tryParse(item['berat'].toString()) ?? 0.0,
             chipId: item['chip_id'].toString(),
             createdAt:
-                DateTime.parse(item['createdAt']).add(Duration(hours: 7)),
+                DateTime.parse(item['createdAt']).add(const Duration(hours: 7)),
           );
 
-          // Add to DataTable with formatted time in GMT+7
           listDataTable.add(DataTableModel({
             'CHIP-ID': item['chip_id'].toString(),
             'Weight (KG)': item['berat'].toString(),
@@ -232,9 +258,11 @@ class LoadcellController extends GetxController {
 
         dataList.refresh();
       } else {
+        print('Failed to load daily data: ${response.statusCode}');
         throw Exception('Failed to load data');
       }
     } catch (e) {
+      print('Error fetching daily data: $e');
       throw Exception('Failed to fetch data');
     }
   }
@@ -245,25 +273,26 @@ class LoadcellController extends GetxController {
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
       final String url =
-          'https://modernfarming-api.vercel.app/api/loadcellbadan/weekly/$formattedDate/$chipId';
+          '$_apiBaseUrl$_apiLoadcellWeeklyEndpoint/$formattedDate/$chipId';
       final response = await _http.get(url);
 
       if (response.statusCode == 200) {
         final data = response.body as Map<String, dynamic>;
-        final List<dynamic> dataList = data['data'];
+        final List<dynamic> dataListResponse = data['data'];
 
-        if (dataList.isEmpty) {
-          return; // Exit if no data
+        if (dataListResponse == null || dataListResponse.isEmpty) {
+          listDataTableWeek.clear();
+          this.dataList.clear();
+          return;
         }
 
         listDataTableWeek.clear();
         this.dataList.clear();
 
-        // Ensure we have exactly 7 data points, centered around the selected date
         final List<ChartModel> limitedWeeklyData = [];
-        for (var item in dataList) {
+        for (var item in dataListResponse) {
           final chartModel = ChartModel(
-            id: item['date'], // Handle id as String
+            id: item['date'],
             berat: item['averageBerat'] is double
                 ? item['averageBerat']
                 : double.tryParse(item['averageBerat'].toString()) ?? 0.0,
@@ -273,12 +302,14 @@ class LoadcellController extends GetxController {
           limitedWeeklyData.add(chartModel);
         }
 
-        // Update the data list for the chart
         this.dataList.addAll(limitedWeeklyData);
+        dataList.refresh();
       } else {
+        print('Failed to load weekly data: ${response.statusCode}');
         throw Exception('Failed to load data');
       }
     } catch (e) {
+      print('Error fetching weekly data: $e');
       throw Exception('Failed to fetch data');
     }
   }
@@ -289,14 +320,16 @@ class LoadcellController extends GetxController {
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
       final String url =
-          'https://modernfarming-api.vercel.app/api/loadcellbadan/monthly/$formattedDate/$chipId';
+          '$_apiBaseUrl$_apiLoadcellMonthlyEndpoint/$formattedDate/$chipId';
       final response = await _http.get(url);
 
       if (response.statusCode == 200) {
         final data = monthlyDataResponseFromJson(response.bodyString!);
 
         if (data.averageValues.isEmpty) {
-          return; // Exit if no average values
+          listDataTableMonth.clear();
+          dataList.clear();
+          return;
         }
 
         listDataTableMonth.clear();
@@ -321,24 +354,25 @@ class LoadcellController extends GetxController {
 
         dataList.refresh();
       } else {
+        print('Failed to load monthly data: ${response.statusCode}');
         throw Exception('Failed to load data');
       }
     } catch (e) {
+      print('Error fetching monthly data: $e');
       throw Exception('Failed to fetch data');
     }
   }
 
   void fetchDataTable(int page) async {
     try {
-      final response = await _http.get(
-          'https://modernfarming-api.vercel.app/api/loadcellbadan',
+      final response = await _http.get('$_apiBaseUrl$_apiLoadcellEndpoint',
           query: {'page': page.toString()});
       if (response.statusCode == 200) {
         final data = response.body['data']['rows'];
         listDataTable.clear();
         for (var item in data) {
           final createdAt =
-              DateTime.parse(item['createdAt']).add(Duration(hours: 7));
+              DateTime.parse(item['createdAt']).add(const Duration(hours: 7));
           listDataTable.add(DataTableModel({
             'CHIP-ID': item['chip_id'].toString(),
             'Sheep Name': item['nama_domba'].toString(),
@@ -350,33 +384,18 @@ class LoadcellController extends GetxController {
         currentPage = page;
         totalPage = response.body['pagination']['totalPages'];
       } else {
+        print('Failed to load table data: ${response.statusCode}');
         throw Exception('Failed to load data');
       }
     } catch (e) {
+      print('Error fetching table data: $e');
       throw Exception('Failed to fetch data');
     }
   }
 
   @override
-  void onInit() {
-    super.onInit();
-    tanggalLahirController = TextEditingController();
-    fetchSheepData();
-    fetchLoadcellData();
-    fetchDailyData(DateTime.now());
-    fetchWeeklyData(DateTime.now());
-    fetchMonthlyData(DateTime.now());
-    fetchListDomba();
-    fetchDataTable(currentPage);
-
-    // Set up a timer to refresh data every 5 seconds
-    timer =
-        Timer.periodic(Duration(seconds: 1), (Timer t) => fetchLoadcellData());
-  }
-
-  @override
   void dispose() {
-    timer?.cancel(); // Cancel the timer when the controller is disposed
+    timer?.cancel();
     tanggalLahirController.dispose();
     super.dispose();
   }
@@ -392,11 +411,9 @@ class LoadcellController extends GetxController {
     dataList.clear();
     fetchSheepData();
     fetchLoadcellData();
-    // fetch data
     fetchDailyData(DateTime.now());
     fetchWeeklyData(DateTime.now());
     fetchMonthlyData(DateTime.now());
-    // fetch list domba dan data
     fetchListDomba();
     fetchDataTable(currentPage);
   }

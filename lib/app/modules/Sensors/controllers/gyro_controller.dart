@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:monitoring_kambing/app/data/chart_model.dart';
 import 'package:monitoring_kambing/app/data/datatable_model.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import package dotenv
 
 class GyroController extends GetxController {
   Timer? timer;
@@ -40,6 +41,28 @@ class GyroController extends GetxController {
   var selectedHistory = "Current".obs;
   var isFetching = false.obs;
 
+  // --- Tambahkan variabel untuk base URL dan endpoint dari .env ---
+  late String _BaseUrl;
+  late String _ChipEndpoint;
+  late String _MpuEndpoint;
+  late String _MpuGraphEndpoint;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _BaseUrl = dotenv.env['API_BASE_URL']!;
+    _ChipEndpoint = dotenv.env['API_CHIP_ENDPOINT']!;
+    _MpuEndpoint = dotenv.env['API_MPU_ENDPOINT']!;
+    _MpuGraphEndpoint = dotenv.env['API_GRAFIK_MPU_ENDPOINT']!;
+
+    fetchSheepData();
+    fetchGyroData();
+    fetchListDomba();
+    fetchDataTable(currentPage);
+    timer = Timer.periodic(
+        const Duration(seconds: 2), (Timer t) => fetchGyroData());
+  }
+
   void handlerSwitch(bool value) {
     isFetching.value = value;
   }
@@ -70,8 +93,9 @@ class GyroController extends GetxController {
       final List<Map<String, String>> allSheep = [];
 
       while (true) {
+        // --- Gunakan variabel dari .env di sini ---
         final response = await _http.get(
-          'https://modernfarming-api.vercel.app/api/chip',
+          '$_BaseUrl$_ChipEndpoint',
           query: {'page': page.toString()},
         );
 
@@ -112,8 +136,8 @@ class GyroController extends GetxController {
 
   void fetchListDomba() async {
     try {
-      final response =
-          await _http.get('https://modernfarming-api.vercel.app/api/chip');
+      // --- Gunakan variabel dari .env di sini ---
+      final response = await _http.get('$_BaseUrl$_ChipEndpoint');
       if (response.statusCode == 200) {
         final data = response.body['data']['rows'];
         final Set<String> seenChipIds = {};
@@ -146,8 +170,9 @@ class GyroController extends GetxController {
       }
 
       print('Fetching data for sheep: ${selectedSheep.value}');
+      // --- Gunakan variabel dari .env di sini ---
       final response = await _http.get(
-        'https://modernfarming-api.vercel.app/api/mpu/graph',
+        '$_BaseUrl$_MpuGraphEndpoint',
         query: {'chip_id': selectedSheep.value},
       );
 
@@ -243,15 +268,15 @@ class GyroController extends GetxController {
 
   void fetchDataTable(int page) async {
     try {
-      final response = await _http.get(
-          'https://modernfarming-api.vercel.app/api/mpu',
-          query: {'page': page.toString()});
+      // --- Gunakan variabel dari .env di sini ---
+      final response = await _http
+          .get('$_BaseUrl$_MpuEndpoint', query: {'page': page.toString()});
       if (response.statusCode == 200) {
         final data = response.body;
         listDataTable.clear();
         for (var item in data['data']['rows']) {
           final createdAt =
-              DateTime.parse(item['createdAt']).add(Duration(hours: 7));
+              DateTime.parse(item['createdAt']).add(const Duration(hours: 7));
           listDataTable.add(DataTableModel({
             'CHIP-ID': item['chip_id'],
             'Sheep Name': item['nama_domba'],
@@ -272,16 +297,6 @@ class GyroController extends GetxController {
     } catch (e) {
       throw Exception('Failed to fetch data');
     }
-  }
-
-  @override
-  void onInit() {
-    super.onInit();
-    fetchSheepData();
-    fetchGyroData();
-    fetchListDomba();
-    fetchDataTable(currentPage);
-    timer = Timer.periodic(Duration(seconds: 2), (Timer t) => fetchGyroData());
   }
 
   @override

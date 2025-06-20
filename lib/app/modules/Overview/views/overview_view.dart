@@ -76,32 +76,32 @@ class OverviewView extends GetView<OverviewController> {
                             );
                           }),
                           const SizedBox(width: 10),
-                          CustomDateFieldDomba(
-                            hintText: "Choose date",
-                            controller: controller.tanggalLahirController,
-                            onDateSelected: (date) {
-                              controller.updateSelectedDate(date);
-                            },
-                            isEnabled: true,
-                            width: 150,
-                            height: 30,
-                          ),
+                          // CustomDateFieldDomba(
+                          //   hintText: "Choose date",
+                          //   controller: controller.tanggalLahirController,
+                          //   onDateSelected: (date) {
+                          //     controller.updateSelectedDate(date);
+                          //   },
+                          //   isEnabled: true,
+                          //   width: 150,
+                          //   height: 30,
+                          // ),
                           // Tambahkan tanda strip
-                          const Icon(
-                            Icons.remove,
-                            color: Colors.black,
-                            size: 34.0,
-                          ),
-                          CustomDateFieldDombaa(
-                            hintText: "Choose date",
-                            controller: controller.tanggalLahirControlleer,
-                            onDateSelected: (date) {
-                              controller.updateSelectedDate2(date);
-                            },
-                            isEnabled: true,
-                            width: 150,
-                            height: 30,
-                          ),
+                          // const Icon(
+                          //   Icons.remove,
+                          //   color: Colors.black,
+                          //   size: 34.0,
+                          // ),
+                          // CustomDateFieldDombaa(
+                          //   hintText: "Choose date",
+                          //   controller: controller.tanggalLahirController,
+                          //   onDateSelected: (date) {
+                          //     controller.updateSelectedDate2(date);
+                          //   },
+                          //   isEnabled: true,
+                          //   width: 150,
+                          //   height: 30,
+                          // ),
                         ],
                       ),
                     ),

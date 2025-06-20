@@ -1,49 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:monitoring_kambing/app/data/domba_model.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class OverviewController extends GetxController {
   var dataList = <Baris>[].obs;
   var isLoading = true.obs;
   var currentPage = 1.obs;
   var totalPage = 1.obs;
-  final int itemsPerPage = 5; // Jumlah item per halaman
+  final int itemsPerPage = 5;
   final GetConnect _http = GetConnect();
+
+  final Rx<String?> selectedSheep = Rx<String?>(null);
+  final RxList<Map<String, String>> sheepList = <Map<String, String>>[].obs;
+  var selectedHistory = "Current".obs;
+  var isFetching = false.obs;
+
+  late String _baseUrl;
+  late String _chipEndpoint;
+
+  late TextEditingController tanggalLahirController;
 
   @override
   void onInit() {
     super.onInit();
+    _baseUrl = dotenv.env['BASE_URL'] ?? 'https://modernfarming-api.vercel.app';
+    _chipEndpoint = dotenv.env['CHIP_ENDPOINT'] ?? '/api/chip';
     tanggalLahirController = TextEditingController();
-    tanggalLahirControlleer = TextEditingController();
     fetchSheepData();
   }
 
   @override
   void dispose() {
     tanggalLahirController.dispose();
-    tanggalLahirControlleer.dispose();
     super.dispose();
   }
-
-  final Rx<String?> selectedSheep = Rx<String?>(null);
-
-  // Membuat variabel sheepList yang berisi list dari Map<String, String>
-  final RxList<Map<String, String>> sheepList = <Map<String, String>>[].obs;
-
-  var selectedHistory = "Current".obs;
-  var isFetching = false.obs;
 
   void handlerSwitch(bool value) {
     isFetching.value = value;
   }
-
-  late TextEditingController tanggalLahirController;
-  late TextEditingController tanggalLahirControlleer;
-
-  get selectedDate => null;
-
-  void updateSelectedDate2(DateTime? date) {}
-  void updateSelectedDate(DateTime? date) {}
 
   void handlerDropdownSheep(String? sheep) {
     selectedSheep.value = sheep;
@@ -67,7 +62,7 @@ class OverviewController extends GetxController {
 
       while (true) {
         final response = await _http.get(
-          'https://modernfarming-api.vercel.app/api/chip',
+          '$_baseUrl$_chipEndpoint',
           query: {'page': page.toString()},
         );
 
@@ -92,12 +87,11 @@ class OverviewController extends GetxController {
         }
       }
 
-      sheepList.assignAll(allSheep); // Perbarui daftar dropdown
-      sheepList.refresh(); // Paksa UI diperbarui
+      sheepList.assignAll(allSheep);
+      sheepList.refresh();
 
-      // Hanya set default jika belum ada yang dipilih sebelumnya
       if (selectedSheep.value == null && allSheep.isNotEmpty) {
-        selectedSheep.value = null; // Pastikan tetap null agar hint muncul
+        selectedSheep.value = null;
       }
     } catch (e) {
       print("Error fetching sheep data: $e");
@@ -108,14 +102,13 @@ class OverviewController extends GetxController {
 
   void fetchListDomba() async {
     try {
-      final response =
-          await _http.get('https://modernfarming-api.vercel.app/api/chip');
+      final response = await _http.get('$_baseUrl$_chipEndpoint');
       if (response.statusCode == 200) {
         final data = response.body['data']['rows'];
         final Set<String> seenChipIds = {};
         sheepList.clear();
         for (var item in data) {
-          final chipId = item['chip_id'].toString();
+          final chipId = item['id'].toString();
           if (!seenChipIds.contains(chipId)) {
             seenChipIds.add(chipId);
             sheepList.add({
@@ -125,12 +118,11 @@ class OverviewController extends GetxController {
           }
         }
         sheepList.sort((a, b) => a['nama_domba']!.compareTo(b['nama_domba']!));
-        print("Sheep list: $sheepList");
       } else {
         throw Exception('Failed to load sheep list');
       }
     } catch (e) {
-      throw Exception('Failed to fetch sheep list: $e');
+      print('Failed to fetch sheep list: $e');
     }
   }
 
@@ -138,7 +130,7 @@ class OverviewController extends GetxController {
     isLoading(true);
     try {
       final response = await _http.get(
-        "https://modernfarming-api.vercel.app/api/chip/$chipId",
+        "$_baseUrl$_chipEndpoint/$chipId",
       );
 
       if (response.statusCode == 200 && response.body != null) {
@@ -146,10 +138,8 @@ class OverviewController extends GetxController {
         if (data != null) {
           final domba = DombaModels.fromJson(response.body);
           dataList.value = domba.data;
-          print("Data successfully fetched: $dataList");
         } else {
           dataList.value = [];
-          print("No data available for chip ID: $chipId");
         }
       } else {
         throw Exception("Failed to fetch data: ${response.statusText}");
@@ -161,9 +151,9 @@ class OverviewController extends GetxController {
     }
   }
 
-  void resetView() {}
-
-  void handlerDropdownDate(String? value) {}
-
-  void updateBirthDate(DateTime? date) {}
+  void resetView() {
+    selectedSheep.value = null;
+    dataList.clear();
+    fetchSheepData();
+  }
 }

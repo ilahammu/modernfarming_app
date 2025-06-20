@@ -23,15 +23,7 @@ class LoadcellController extends GetxController {
   ].obs;
 
   late TextEditingController tanggalLahirController;
-
   Rx<DateTime?> selectedDate = Rx<DateTime?>(null);
-  String? tanggalLahirValidator(String? value) {
-    if (value == null || value.isEmpty) {
-      return "Tanggal Lahir Tidak Boleh Kosong";
-    } else {
-      return null;
-    }
-  }
 
   final RxList<DataTableModel> listDataTable = <DataTableModel>[].obs;
   final RxList<DataTableModelMonth> listDataTableMonth =
@@ -49,34 +41,56 @@ class LoadcellController extends GetxController {
   var isFetching = false.obs;
   var isLoading = true.obs;
 
-  late String _apiBaseUrl;
-  late String _apiChipEndpoint;
-  late String _apiLoadcellEndpoint;
-  late String _apiLoadcellDailyEndpoint;
-  late String _apiLoadcellWeeklyEndpoint;
-  late String _apiLoadcellMonthlyEndpoint;
+  late String _baseUrl;
+  late String _chipEndpoint;
+  late String _loadcellEndpoint;
+  late String _loadcellDailyEndpoint;
+  late String _loadcellWeeklyEndpoint;
+  late String _loadcellMonthlyEndpoint;
 
   @override
   void onInit() {
     super.onInit();
-    _apiBaseUrl = dotenv.env['API_BASE_URL']!;
-    _apiChipEndpoint = dotenv.env['API_CHIP_ENDPOINT']!;
-    _apiLoadcellEndpoint = dotenv.env['API_LOADCELL_ENDPOINT']!;
-    _apiLoadcellDailyEndpoint = dotenv.env['API_LOADCELL_DAILY_ENDPOINT']!;
-    _apiLoadcellWeeklyEndpoint = dotenv.env['API_LOADCELL_WEEKLY_ENDPOINT']!;
-    _apiLoadcellMonthlyEndpoint = dotenv.env['API_LOADCELL_MONTHLY_ENDPOINT']!;
+    _baseUrl = dotenv.env['BASE_URL']!;
+    _chipEndpoint = dotenv.env['CHIP_ENDPOINT']!;
+    _loadcellEndpoint = dotenv.env['LOADCELL_ENDPOINT']!;
+    _loadcellDailyEndpoint = dotenv.env['LOADCELL_DAILY_ENDPOINT']!;
+    _loadcellWeeklyEndpoint = dotenv.env['LOADCELL_WEEKLY_ENDPOINT']!;
+    _loadcellMonthlyEndpoint = dotenv.env['LOADCELL_MONTHLY_ENDPOINT']!;
 
     tanggalLahirController = TextEditingController();
     fetchSheepData();
+    fetchListDomba();
     fetchLoadcellData();
     fetchDailyData(DateTime.now());
     fetchWeeklyData(DateTime.now());
     fetchMonthlyData(DateTime.now());
-    fetchListDomba();
     fetchDataTable(currentPage);
 
     timer = Timer.periodic(
-        const Duration(seconds: 1), (Timer t) => fetchLoadcellData());
+        const Duration(seconds: 2), (Timer t) => fetchLoadcellData());
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    tanggalLahirController.dispose();
+    super.dispose();
+  }
+
+  String? tanggalLahirValidator(String? value) {
+    if (value == null || value.isEmpty) {
+      return "Tanggal Lahir Tidak Boleh Kosong";
+    } else {
+      return null;
+    }
+  }
+
+  void updateSelectedDate(DateTime? date) {
+    selectedDate.value = date;
+    if (selectedSheep.value != null && selectedTimeRange.value != null) {
+      fetchLoadcellData();
+    }
   }
 
   void handlerSwitch(bool value) {
@@ -105,13 +119,6 @@ class LoadcellController extends GetxController {
     selectedHistory.value = history!;
   }
 
-  void updateSelectedDate(DateTime? date) {
-    selectedDate.value = date;
-    if (selectedSheep.value != null && selectedTimeRange.value != null) {
-      fetchLoadcellData();
-    }
-  }
-
   Future<void> fetchSheepData() async {
     isLoading.value = true;
     try {
@@ -121,13 +128,12 @@ class LoadcellController extends GetxController {
 
       while (true) {
         final response = await _http.get(
-          '$_apiBaseUrl$_apiChipEndpoint',
+          '$_baseUrl$_chipEndpoint',
           query: {'page': page.toString()},
         );
 
         if (response.statusCode == 200) {
           final data = response.body['data']['rows'];
-
           for (var item in data) {
             final chipId = item['id']?.toString();
             if (chipId != null &&
@@ -138,11 +144,8 @@ class LoadcellController extends GetxController {
                 'nama_domba': item['nama_domba'].toString(),
                 'chip_id': chipId,
               });
-            } else {
-              print("Invalid or duplicate chip ID: $chipId");
             }
           }
-
           final totalPages = response.body['pagination']['totalPages'];
           if (page >= totalPages) break;
           page++;
@@ -163,13 +166,13 @@ class LoadcellController extends GetxController {
 
   void fetchListDomba() async {
     try {
-      final response = await _http.get('$_apiBaseUrl$_apiChipEndpoint');
+      final response = await _http.get('$_baseUrl$_chipEndpoint');
       if (response.statusCode == 200) {
         final data = response.body['data']['rows'];
         final Set<String> seenChipIds = {};
         sheepList.clear();
         for (var item in data) {
-          final chipId = item['chip_id']?.toString();
+          final chipId = item['id']?.toString();
           if (chipId != null &&
               chipId.isNotEmpty &&
               !seenChipIds.contains(chipId)) {
@@ -178,8 +181,6 @@ class LoadcellController extends GetxController {
               'nama_domba': item['nama_domba'].toString(),
               'chip_id': chipId,
             });
-          } else {
-            print("Invalid or duplicate chip ID: $chipId");
           }
         }
         sheepList.sort((a, b) => a['nama_domba']!.compareTo(b['nama_domba']!));
@@ -188,7 +189,6 @@ class LoadcellController extends GetxController {
       }
     } catch (e) {
       print("Error fetching sheep list: $e");
-      throw Exception('Failed to fetch sheep list: $e');
     }
   }
 
@@ -210,7 +210,6 @@ class LoadcellController extends GetxController {
       }
     } catch (e) {
       print('Error in fetchLoadcellData: $e');
-      throw Exception('Failed to fetch data');
     }
   }
 
@@ -220,12 +219,11 @@ class LoadcellController extends GetxController {
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
       final String url =
-          '$_apiBaseUrl$_apiLoadcellDailyEndpoint/$formattedDate/$chipId';
+          '$_baseUrl$_loadcellDailyEndpoint/$formattedDate/$chipId';
       final response = await _http.get(url);
 
       if (response.statusCode == 200) {
         final data = response.body['data'];
-
         if (data == null || data.isEmpty) {
           listDataTable.clear();
           dataList.clear();
@@ -259,11 +257,9 @@ class LoadcellController extends GetxController {
         dataList.refresh();
       } else {
         print('Failed to load daily data: ${response.statusCode}');
-        throw Exception('Failed to load data');
       }
     } catch (e) {
       print('Error fetching daily data: $e');
-      throw Exception('Failed to fetch data');
     }
   }
 
@@ -273,24 +269,21 @@ class LoadcellController extends GetxController {
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
       final String url =
-          '$_apiBaseUrl$_apiLoadcellWeeklyEndpoint/$formattedDate/$chipId';
+          '$_baseUrl$_loadcellWeeklyEndpoint/$formattedDate/$chipId';
       final response = await _http.get(url);
 
       if (response.statusCode == 200) {
-        final data = response.body as Map<String, dynamic>;
-        final List<dynamic> dataListResponse = data['data'];
-
-        if (dataListResponse == null || dataListResponse.isEmpty) {
+        final data = response.body['data'];
+        if (data == null || data.isEmpty) {
           listDataTableWeek.clear();
-          this.dataList.clear();
+          dataList.clear();
           return;
         }
 
         listDataTableWeek.clear();
-        this.dataList.clear();
+        dataList.clear();
 
-        final List<ChartModel> limitedWeeklyData = [];
-        for (var item in dataListResponse) {
+        for (var item in data) {
           final chartModel = ChartModel(
             id: item['date'],
             berat: item['averageBerat'] is double
@@ -299,18 +292,14 @@ class LoadcellController extends GetxController {
             chipId: chipId,
             createdAt: DateTime.parse(item['date']),
           );
-          limitedWeeklyData.add(chartModel);
+          dataList.add(chartModel);
         }
-
-        this.dataList.addAll(limitedWeeklyData);
         dataList.refresh();
       } else {
         print('Failed to load weekly data: ${response.statusCode}');
-        throw Exception('Failed to load data');
       }
     } catch (e) {
       print('Error fetching weekly data: $e');
-      throw Exception('Failed to fetch data');
     }
   }
 
@@ -320,13 +309,12 @@ class LoadcellController extends GetxController {
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
       final String url =
-          '$_apiBaseUrl$_apiLoadcellMonthlyEndpoint/$formattedDate/$chipId';
+          '$_baseUrl$_loadcellMonthlyEndpoint/$formattedDate/$chipId';
       final response = await _http.get(url);
 
       if (response.statusCode == 200) {
-        final data = monthlyDataResponseFromJson(response.bodyString!);
-
-        if (data.averageValues.isEmpty) {
+        final data = response.body['averageValues'];
+        if (data == null || data.isEmpty) {
           listDataTableMonth.clear();
           dataList.clear();
           return;
@@ -335,11 +323,11 @@ class LoadcellController extends GetxController {
         listDataTableMonth.clear();
         dataList.clear();
 
-        for (var item in data.averageValues) {
-          final avgBerat = item.avgBerat;
+        for (var item in data) {
+          final avgBerat = double.tryParse(item['avgBerat'].toString()) ?? 0.0;
 
           final chartModel = ChartModel(
-            id: item.week.toString(),
+            id: item['week'].toString(),
             berat: avgBerat,
             chipId: chipId,
             createdAt: selectedDate,
@@ -355,18 +343,18 @@ class LoadcellController extends GetxController {
         dataList.refresh();
       } else {
         print('Failed to load monthly data: ${response.statusCode}');
-        throw Exception('Failed to load data');
       }
     } catch (e) {
       print('Error fetching monthly data: $e');
-      throw Exception('Failed to fetch data');
     }
   }
 
   void fetchDataTable(int page) async {
     try {
-      final response = await _http.get('$_apiBaseUrl$_apiLoadcellEndpoint',
-          query: {'page': page.toString()});
+      final response = await _http.get(
+        '$_baseUrl$_loadcellEndpoint',
+        query: {'page': page.toString()},
+      );
       if (response.statusCode == 200) {
         final data = response.body['data']['rows'];
         listDataTable.clear();
@@ -385,19 +373,10 @@ class LoadcellController extends GetxController {
         totalPage = response.body['pagination']['totalPages'];
       } else {
         print('Failed to load table data: ${response.statusCode}');
-        throw Exception('Failed to load data');
       }
     } catch (e) {
       print('Error fetching table data: $e');
-      throw Exception('Failed to fetch data');
     }
-  }
-
-  @override
-  void dispose() {
-    timer?.cancel();
-    tanggalLahirController.dispose();
-    super.dispose();
   }
 
   void resetState() {
@@ -418,5 +397,3 @@ class LoadcellController extends GetxController {
     fetchDataTable(currentPage);
   }
 }
-
-extension on Map<String, dynamic> {}

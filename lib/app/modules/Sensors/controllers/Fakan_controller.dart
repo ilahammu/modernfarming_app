@@ -1,14 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:monitoring_kambing/app/data/chart_model.dart';
 import 'package:monitoring_kambing/app/data/datatable_model.dart';
 import 'package:monitoring_kambing/app/data/datatable_model_month.dart';
 import 'package:monitoring_kambing/app/data/datatable_model_week.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
-// ==========================================================================================================================================
 
 class WeightFoodController extends GetxController {
   Timer? timer;
@@ -27,6 +25,7 @@ class WeightFoodController extends GetxController {
 
   late TextEditingController tanggalLahirController;
   Rx<DateTime?> selectedDate = Rx<DateTime?>(null);
+
   String? tanggalLahirValidator(String? value) {
     if (value == null || value.isEmpty) {
       return "Tanggal Lahir Tidak Boleh Kosong";
@@ -68,24 +67,34 @@ class WeightFoodController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _baseUrl = dotenv.env['API_BASE_URL']!;
-    _chipEndpoint = dotenv.env['API_CHIP_ENDPOINT']!;
-    _pakanEndpoint = dotenv.env['API_PAKAN_ENDPOINT']!;
-    _pakanDailyEndpoint = dotenv.env['API_PAKAN_DAILY_ENDPOINT']!;
-    _pakanWeeklyEndpoint = dotenv.env['API_PAKAN_WEEKLY_ENDPOINT']!;
-    _pakanMonthlyEndpoint = dotenv.env['API_PAKAN_MONTHLY_ENDPOINT']!;
+
+    _baseUrl = dotenv.env['BASE_URL']!;
+    _chipEndpoint = dotenv.env['CHIP_ENDPOINT']!;
+    _pakanEndpoint = dotenv.env['PAKAN_ENDPOINT']!;
+    _pakanDailyEndpoint = dotenv.env['PAKAN_DAILY_ENDPOINT']!;
+    _pakanWeeklyEndpoint = dotenv.env['PAKAN_WEEKLY_ENDPOINT']!;
+    _pakanMonthlyEndpoint = dotenv.env['PAKAN_MONTHLY_ENDPOINT']!;
 
     tanggalLahirController = TextEditingController();
     fetchSheepData();
+    fetchListDomba();
     fetchLoadcellPakanData();
     fetchDailyData(DateTime.now());
     fetchWeeklyData(DateTime.now());
     fetchMonthlyData(DateTime.now());
-    fetchListDomba();
     fetchDataTable(currentPage);
 
-    timer = Timer.periodic(
-        const Duration(seconds: 1), (Timer t) => fetchLoadcellPakanData());
+    timer ??= Timer.periodic(
+      const Duration(seconds: 15),
+      (Timer t) => fetchLoadcellPakanData(),
+    );
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    tanggalLahirController.dispose();
+    super.dispose();
   }
 
   void handlerSwitch(bool value) {
@@ -115,8 +124,6 @@ class WeightFoodController extends GetxController {
     selectedHistory.value = history!;
   }
 
-// ==========================================================================================================================================
-
   Future<void> fetchSheepData() async {
     isLoading.value = true;
     try {
@@ -132,8 +139,6 @@ class WeightFoodController extends GetxController {
 
         if (response.statusCode == 200) {
           final data = response.body['data']['rows'];
-          print("Data received: ${data.length} items");
-
           for (var item in data) {
             final chipId = item['id']?.toString();
             if (chipId != null &&
@@ -144,11 +149,8 @@ class WeightFoodController extends GetxController {
                 'nama_domba': item['nama_domba'].toString(),
                 'chip_id': chipId,
               });
-            } else {
-              print("Invalid or duplicate chip ID: $chipId");
             }
           }
-
           final totalPages = response.body['pagination']['totalPages'];
           if (page >= totalPages) break;
           page++;
@@ -170,8 +172,6 @@ class WeightFoodController extends GetxController {
     }
   }
 
-// ==========================================================================================================================================
-
   void fetchListDomba() async {
     try {
       final response = await _http.get('$_baseUrl$_chipEndpoint');
@@ -180,7 +180,7 @@ class WeightFoodController extends GetxController {
         final Set<String> seenChipIds = {};
         sheepList.clear();
         for (var item in data) {
-          final chipId = item['chip_id']?.toString();
+          final chipId = item['id']?.toString();
           if (chipId != null &&
               chipId.isNotEmpty &&
               !seenChipIds.contains(chipId)) {
@@ -189,51 +189,33 @@ class WeightFoodController extends GetxController {
               'nama_domba': item['nama_domba'].toString(),
               'chip_id': chipId,
             });
-          } else {
-            print("Invalid or duplicate chip ID: $chipId");
           }
         }
         sheepList.sort((a, b) => a['nama_domba']!.compareTo(b['nama_domba']!));
-        print("Sheep list: $sheepList");
       } else {
         throw Exception('Failed to load sheep list');
       }
     } catch (e) {
       print("Error fetching sheep list: $e");
-      throw Exception('Failed to fetch sheep list: $e');
     }
   }
 
-// ==========================================================================================================================================
-
   Future<void> fetchDailyData(DateTime selectedDate) async {
     try {
-      print('Fetching daily data...');
       final String formattedDate =
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
-      final String url = '$_pakanDailyEndpoint/$formattedDate/$chipId';
-      print(url);
-      final response = await _http.get('$_baseUrl$url');
-
-      print('Response body: ${response.body}');
+      final String url = '$_baseUrl$_pakanDailyEndpoint/$formattedDate/$chipId';
+      final response = await _http.get(url);
 
       if (response.statusCode == 200) {
         final data = response.body['data'];
-        print('Decoded data: $data');
-
-        if (data == null || data.isEmpty) {
-          print('No data returned');
-          listDataTable.clear();
-          dataList.clear();
-          return;
-        }
+        if (data.isEmpty) return;
 
         listDataTable.clear();
         dataList.clear();
 
         for (var item in data) {
-          print('Processing item: $item');
           final chartModel = ChartModel(
             id: item['id'].toString(),
             beratPakan: item['berat_pakan'] is double
@@ -257,103 +239,80 @@ class WeightFoodController extends GetxController {
 
           dataList.add(chartModel);
         }
-
         dataList.refresh();
       } else {
-        print('Failed to load data: ${response.statusCode}');
-        throw Exception('Failed to load data');
+        throw Exception('Failed to load daily data');
       }
     } catch (e) {
-      print('Error fetching data: $e');
-      throw Exception('Failed to fetch data');
+      print('Error fetching daily data: $e');
     }
   }
 
   Future<void> fetchWeeklyData(DateTime selectedDate) async {
     try {
-      print('Fetching weekly data...');
       final String formattedDate =
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
-      final String url = '$_pakanWeeklyEndpoint/$formattedDate/$chipId';
-      print(url);
-      final response = await _http.get('$_baseUrl$url');
-
-      print('Response body: ${response.body}');
+      final String url =
+          '$_baseUrl$_pakanWeeklyEndpoint/$formattedDate/$chipId';
+      final response = await _http.get(url);
 
       if (response.statusCode == 200) {
-        final data = response.body as Map<String, dynamic>;
-        final List<dynamic> dataListResponse = data['data'];
-        print('Decoded data: $dataListResponse');
-
-        if (dataListResponse == null || dataListResponse.isEmpty) {
-          print('No data returned');
-          listDataTableWeek.clear();
-          this.dataList.clear();
-          return;
-        }
+        final data = response.body['data'];
+        if (data.isEmpty) return;
 
         listDataTableWeek.clear();
-        this.dataList.clear();
+        dataList.clear();
 
-        final List<ChartModel> limitedWeeklyData = [];
-        for (var item in dataListResponse) {
+        for (var item in data) {
           final chartModel = ChartModel(
             id: item['date'],
             beratPakan: item['averagePakan'] is double
                 ? item['averagePakan']
                 : double.tryParse(item['averagePakan'].toString()) ?? 0.0,
+            beratPakanmentah: item['averagePakanMentah'] is double
+                ? item['averagePakanMentah']
+                : double.tryParse(item['averagePakanMentah'].toString()) ?? 0.0,
             chipId: chipId,
             createdAt: DateTime.parse(item['date']),
           );
-          limitedWeeklyData.add(chartModel);
+          dataList.add(chartModel);
         }
-
-        this.dataList.addAll(limitedWeeklyData);
         dataList.refresh();
       } else {
-        print('Failed to load data: ${response.statusCode}');
-        throw Exception('Failed to load data');
+        throw Exception('Failed to load weekly data');
       }
     } catch (e) {
-      print('Error fetching data: $e');
-      throw Exception('Failed to fetch data');
+      print('Error fetching weekly data: $e');
     }
   }
 
   Future<void> fetchMonthlyData(DateTime selectedDate) async {
     try {
-      print('Fetching monthly data...');
       final String formattedDate =
           DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(selectedDate);
       final String chipId = selectedSheep.value ?? '';
-      final String url = '$_pakanMonthlyEndpoint/$formattedDate/$chipId';
-      print(url);
-      final response = await _http.get('$_baseUrl$url');
-
-      print('Response body: ${response.body}');
+      final String url =
+          '$_baseUrl$_pakanMonthlyEndpoint/$formattedDate/$chipId';
+      final response = await _http.get(url);
 
       if (response.statusCode == 200) {
-        final data = monthlyDataResponseFromJson(response.bodyString!);
-        print('Decoded data: $data');
-
-        if (data.averageValues.isEmpty) {
-          print('No average values returned');
-          listDataTableMonth.clear();
-          dataList.clear();
-          return;
-        }
+        final data = response.body['averageValues'];
+        if (data == null || data.isEmpty) return;
 
         listDataTableMonth.clear();
         dataList.clear();
 
-        for (var item in data.averageValues) {
-          print('Processing item: $item');
-          final avgBeratPakan = item.avgBeratPakan;
+        for (var item in data) {
+          final avgBeratPakan =
+              double.tryParse(item['avgBeratPakan'].toString()) ?? 0.0;
+          final avgBeratPakanMentah =
+              double.tryParse(item['avgBeratPakanMentah'].toString()) ?? 0.0;
 
           final chartModel = ChartModel(
-            id: item.week.toString(),
+            id: item['week'].toString(),
             beratPakan: avgBeratPakan,
+            beratPakanmentah: avgBeratPakanMentah,
             chipId: chipId,
             createdAt: selectedDate,
           );
@@ -364,26 +323,18 @@ class WeightFoodController extends GetxController {
 
           dataList.add(chartModel);
         }
-
         dataList.refresh();
       } else {
-        print('Failed to load data: ${response.statusCode}');
-        throw Exception('Failed to load data');
+        throw Exception('Failed to load monthly data');
       }
     } catch (e) {
-      print('Error fetching data: $e');
-      throw Exception('Failed to fetch data');
+      print('Error fetching monthly data: $e');
     }
   }
 
-// ==========================================================================================================================================
-
   void fetchLoadcellPakanData() async {
     try {
-      if (selectedSheep.value == null || selectedDate.value == null) {
-        print("No sheep or date selected for Loadcell Pakan data.");
-        return;
-      }
+      if (selectedSheep.value == null || selectedDate.value == null) return;
 
       final String timeRange = selectedTimeRange.value ?? 'Daily';
 
@@ -395,20 +346,20 @@ class WeightFoodController extends GetxController {
         await fetchMonthlyData(selectedDate.value!);
       }
     } catch (e) {
-      print('Error in fetchLoadcellPakanData: $e');
-      throw Exception('Failed to fetch data');
+      print('Error fetching Loadcell Pakan data: $e');
     }
   }
 
   void fetchDataTable(int page) async {
     try {
-      final response = await _http
-          .get('$_baseUrl$_pakanEndpoint', query: {'page': page.toString()});
+      final response = await _http.get(
+        '$_baseUrl$_pakanEndpoint',
+        query: {'page': page.toString()},
+      );
       if (response.statusCode == 200) {
-        final data = response.body['data']['rows'];
+        final data = response.body;
         listDataTable.clear();
-        print(response.body);
-        for (var item in data) {
+        for (var item in data['data']['rows']) {
           final createdAt =
               DateTime.parse(item['createdAt']).add(const Duration(hours: 7));
           listDataTable.add(DataTableModel({
@@ -421,22 +372,13 @@ class WeightFoodController extends GetxController {
           }));
         }
         currentPage = page;
-        totalPage = response.body['pagination']['totalPages'];
+        totalPage = data['pagination']['totalPages'];
       } else {
         throw Exception('Failed to load data');
       }
     } catch (e) {
-      throw Exception('Failed to fetch data: $e');
+      print('Error fetching data table: $e');
     }
-  }
-
-// ==========================================================================================================================================
-
-  @override
-  void dispose() {
-    timer?.cancel();
-    tanggalLahirController.dispose();
-    super.dispose();
   }
 
   void resetState() {
@@ -446,7 +388,6 @@ class WeightFoodController extends GetxController {
     tanggalLahirController.clear();
     listDataTable.clear();
     listDataTableWeek.clear();
-    listDataTableMonth.clear;
     dataList.clear();
     fetchSheepData();
     fetchLoadcellPakanData();

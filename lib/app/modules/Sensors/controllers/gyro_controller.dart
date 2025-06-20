@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:monitoring_kambing/app/data/chart_model.dart';
 import 'package:monitoring_kambing/app/data/datatable_model.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import package dotenv
 
 class GyroController extends GetxController {
   Timer? timer;
@@ -26,52 +26,36 @@ class GyroController extends GetxController {
   final RxList<DataTableModel> listDataTable = <DataTableModel>[].obs;
   final RxList<ChartModel> dataList = <ChartModel>[].obs;
   final Rx<String?> selectedSheep = Rx<String?>(null);
-  final List<String> listDomba = <String>[].obs;
   final RxList<Map<String, String>> sheepList = <Map<String, String>>[].obs;
+
   // Chart data
   final RxList<FlSpot> accXData = <FlSpot>[].obs;
   final RxList<FlSpot> accYData = <FlSpot>[].obs;
   final RxList<FlSpot> accZData = <FlSpot>[].obs;
   final RxList<FlSpot> distanceData = <FlSpot>[].obs;
+
   // Chart axis limits
   final Rx<double> minX = 0.0.obs;
   final Rx<double> maxX = 0.0.obs;
   final Rx<double> minY = 0.0.obs;
   final Rx<double> maxY = 0.0.obs;
+
   var selectedHistory = "Current".obs;
   var isFetching = false.obs;
+  var isLoading = true.obs;
 
-  // --- Tambahkan variabel untuk base URL dan endpoint dari .env ---
-  late String _BaseUrl;
-  late String _ChipEndpoint;
-  late String _MpuEndpoint;
-  late String _MpuGraphEndpoint;
-
-  @override
-  void onInit() {
-    super.onInit();
-    _BaseUrl = dotenv.env['API_BASE_URL']!;
-    _ChipEndpoint = dotenv.env['API_CHIP_ENDPOINT']!;
-    _MpuEndpoint = dotenv.env['API_MPU_ENDPOINT']!;
-    _MpuGraphEndpoint = dotenv.env['API_GRAFIK_MPU_ENDPOINT']!;
-
-    fetchSheepData();
-    fetchGyroData();
-    fetchListDomba();
-    fetchDataTable(currentPage);
-    timer = Timer.periodic(
-        const Duration(seconds: 2), (Timer t) => fetchGyroData());
-  }
+  late String _baseUrl;
+  late String _chipEndpoint;
+  late String _mpuEndpoint;
+  late String _mpuGraphEndpoint;
 
   void handlerSwitch(bool value) {
     isFetching.value = value;
   }
 
-  var isLoading = true.obs;
-
   void handlerDropdownSheep(String? sheep) {
-    selectedSheep.value = sheep!;
-    fetchGyroData(); // Fetch data when a sheep is selected
+    selectedSheep.value = sheep;
+    fetchGyroData();
   }
 
   void handlerDropdownHistory(String? history) {
@@ -84,7 +68,6 @@ class GyroController extends GetxController {
     chartData.value = newData;
   }
 
-  // Fetch data for the dropdown
   Future<void> fetchSheepData() async {
     isLoading.value = true;
     try {
@@ -93,9 +76,8 @@ class GyroController extends GetxController {
       final List<Map<String, String>> allSheep = [];
 
       while (true) {
-        // --- Gunakan variabel dari .env di sini ---
         final response = await _http.get(
-          '$_BaseUrl$_ChipEndpoint',
+          '$_baseUrl$_chipEndpoint',
           query: {'page': page.toString()},
         );
 
@@ -120,12 +102,11 @@ class GyroController extends GetxController {
         }
       }
 
-      sheepList.assignAll(allSheep); // Perbarui daftar dropdown
-      sheepList.refresh(); // Paksa UI diperbarui
+      sheepList.assignAll(allSheep);
+      sheepList.refresh();
 
-      // Hanya set default jika belum ada yang dipilih sebelumnya
       if (selectedSheep.value == null && allSheep.isNotEmpty) {
-        selectedSheep.value = null; // Pastikan tetap null agar hint muncul
+        selectedSheep.value = null;
       }
     } catch (e) {
       print("Error fetching sheep data: $e");
@@ -136,14 +117,13 @@ class GyroController extends GetxController {
 
   void fetchListDomba() async {
     try {
-      // --- Gunakan variabel dari .env di sini ---
-      final response = await _http.get('$_BaseUrl$_ChipEndpoint');
+      final response = await _http.get('$_baseUrl$_chipEndpoint');
       if (response.statusCode == 200) {
         final data = response.body['data']['rows'];
         final Set<String> seenChipIds = {};
         sheepList.clear();
         for (var item in data) {
-          final chipId = item['chip_id'].toString();
+          final chipId = item['id'].toString();
           if (!seenChipIds.contains(chipId)) {
             seenChipIds.add(chipId);
             sheepList.add({
@@ -153,12 +133,11 @@ class GyroController extends GetxController {
           }
         }
         sheepList.sort((a, b) => a['nama_domba']!.compareTo(b['nama_domba']!));
-        print("Sheep list: $sheepList");
       } else {
         throw Exception('Failed to load sheep list');
       }
     } catch (e) {
-      throw Exception('Failed to fetch sheep list: $e');
+      print("Error fetching sheep list: $e");
     }
   }
 
@@ -169,14 +148,10 @@ class GyroController extends GetxController {
         return;
       }
 
-      print('Fetching data for sheep: ${selectedSheep.value}');
-      // --- Gunakan variabel dari .env di sini ---
       final response = await _http.get(
-        '$_BaseUrl$_MpuGraphEndpoint',
+        '$_baseUrl$_mpuGraphEndpoint',
         query: {'chip_id': selectedSheep.value},
       );
-
-      print('Response data: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = response.body;
@@ -193,7 +168,7 @@ class GyroController extends GetxController {
 
         for (var item in data['data']['rows']) {
           final chartModel = ChartModel(
-            id: item['id'].toString(), // Ensure id is treated as String
+            id: item['id'].toString(),
             chipId: item['chip_id'].toString(),
             mean_x: item['mean_x']?.toDouble() ?? 0,
             mean_y: item['mean_y']?.toDouble() ?? 0,
@@ -211,7 +186,6 @@ class GyroController extends GetxController {
           newAccYData.add(FlSpot(xValue, chartModel.mean_y ?? 0));
           newAccZData.add(FlSpot(xValue, chartModel.mean_z ?? 0));
 
-          // Update min and max values
           minXValue = xValue < minXValue ? xValue : minXValue;
           maxXValue = xValue > maxXValue ? xValue : maxXValue;
           minYValue = [
@@ -228,7 +202,6 @@ class GyroController extends GetxController {
           ].reduce((a, b) => a > b ? a : b);
         }
 
-        // Sort the data by x-value (timestamp)
         newAccXData.sort((a, b) => a.x.compareTo(b.x));
         newAccYData.sort((a, b) => a.x.compareTo(b.x));
         newAccZData.sort((a, b) => a.x.compareTo(b.x));
@@ -241,7 +214,7 @@ class GyroController extends GetxController {
           newDistanceData =
               newDistanceData.sublist(newDistanceData.length - 20);
         }
-        // Update all reactive variables at once
+
         accXData.value = newAccXData;
         accYData.value = newAccYData;
         accZData.value = newAccZData;
@@ -251,10 +224,6 @@ class GyroController extends GetxController {
         minY.value = minYValue;
         maxY.value = maxYValue;
 
-        print(
-            'Data fetched and processed for chart: ${newAccXData.length} items');
-
-        // Tambahkan ini untuk memperbarui tabel
         fetchDataTable(currentPage);
       } else {
         print('Failed to load data: ${response.statusCode}');
@@ -262,21 +231,21 @@ class GyroController extends GetxController {
       }
     } catch (e) {
       print('Failed to fetch data: $e');
-      throw Exception('Failed to fetch data');
     }
   }
 
   void fetchDataTable(int page) async {
     try {
-      // --- Gunakan variabel dari .env di sini ---
-      final response = await _http
-          .get('$_BaseUrl$_MpuEndpoint', query: {'page': page.toString()});
+      final response = await _http.get(
+        '$_baseUrl$_mpuEndpoint',
+        query: {'page': page.toString()},
+      );
       if (response.statusCode == 200) {
         final data = response.body;
         listDataTable.clear();
         for (var item in data['data']['rows']) {
           final createdAt =
-              DateTime.parse(item['createdAt']).add(const Duration(hours: 7));
+              DateTime.parse(item['createdAt']).add(Duration(hours: 7));
           listDataTable.add(DataTableModel({
             'CHIP-ID': item['chip_id'],
             'Sheep Name': item['nama_domba'],
@@ -288,15 +257,31 @@ class GyroController extends GetxController {
             'Created At': DateFormat('yyyy-MM-dd HH:mm').format(createdAt),
           }));
         }
-        listDataTable.refresh(); // Paksa UI untuk diperbarui
+        listDataTable.refresh();
         currentPage = page;
         totalPage = data['pagination']['totalPages'];
       } else {
         throw Exception('Failed to load data');
       }
     } catch (e) {
-      throw Exception('Failed to fetch data');
+      print('Error fetching data table: $e');
     }
+  }
+
+  @override
+  void onInit() {
+    super.onInit();
+    _baseUrl = dotenv.env['BASE_URL']!;
+    _chipEndpoint = dotenv.env['CHIP_ENDPOINT']!;
+    _mpuEndpoint = dotenv.env['MPU_ENDPOINT']!;
+    _mpuGraphEndpoint = dotenv.env['GRAFIK_MPU_ENDPOINT']!;
+
+    fetchSheepData();
+    fetchGyroData();
+    fetchListDomba();
+    fetchDataTable(currentPage);
+    timer = Timer.periodic(
+        const Duration(seconds: 2), (Timer t) => fetchGyroData());
   }
 
   @override

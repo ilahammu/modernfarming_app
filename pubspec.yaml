@@ -31,6 +31,7 @@ flutter:
   uses-material-design: true
   
   assets:
+    - .env
     - assets/images/anggota/
     - assets/images/logo_keren.png
     - assets/images/sensor/RaFID.png

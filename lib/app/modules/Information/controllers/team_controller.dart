@@ -13,8 +13,7 @@ class TeamController extends GetxController {
     // Simulasi data tim
     teamList.value = [
       {
-        'imageUrl':
-            'assets/images/anggota/ichlasul.jpg', // Perbarui jalur gambar
+        'imageUrl': 'assets/images/anggota/ichlasul.JPG',
         'name': 'Ichlasul Amal Restu',
         'jobType': 'Backend & Hardware Engineer',
         'text': "TEAM LEADER",
@@ -23,7 +22,7 @@ class TeamController extends GetxController {
         'imageUrl': 'assets/images/anggota/reinoo.jpg',
         'name': 'Reino Wahyu Warsono',
         'jobType': 'Hardware Engineer [Loadcell Badan]',
-        'text': "MALING",
+        'text': "MEMBER",
       },
       {
         'imageUrl': 'assets/images/anggota/aura.jpg',

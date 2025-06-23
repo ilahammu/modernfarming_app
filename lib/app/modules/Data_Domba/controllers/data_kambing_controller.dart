@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:monitoring_kambing/app/data/datatable_model.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class DataKambingController extends GetxController {
   late TextEditingController namaDombaController;
@@ -41,10 +41,26 @@ class DataKambingController extends GetxController {
     'Created At',
   ].obs;
 
+  late String _baseUrl;
+  late String _chipEndpoint;
+  late String _rfidGetEndpoint;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _baseUrl = dotenv.env['BASE_URL']!;
+    _chipEndpoint = dotenv.env['CHIP_ENDPOINT']!;
+    _rfidGetEndpoint = dotenv.env['RFID']!;
+    namaDombaController = TextEditingController();
+    chipIdController = TextEditingController();
+    tanggalLahirController = TextEditingController();
+    fetchDataTable(currentPage);
+    fetchChipId();
+  }
+
   void fetchChipId() async {
     try {
-      final response = await _http
-          .get('https://l7xgct6c-3000.asse.devtunnels.ms/api/rfid/get');
+      final response = await _http.get('$_baseUrl$_rfidGetEndpoint');
       if (response.statusCode == 200) {
         chipIdController.text = response.body['data']['chip_id'];
       } else {
@@ -90,7 +106,7 @@ class DataKambingController extends GetxController {
 
     try {
       final response = await _http.post(
-        'https://l7xgct6c-3000.asse.devtunnels.ms/api/chip',
+        '$_baseUrl$_chipEndpoint',
         jsonEncode(payload), // Pastikan payload di-encode menjadi JSON
         headers: {
           'Content-Type': 'application/json', // Tetapkan header yang benar
@@ -124,9 +140,8 @@ class DataKambingController extends GetxController {
 
   void fetchDataTable(int page) async {
     try {
-      final response = await _http.get(
-          "https://l7xgct6c-3000.asse.devtunnels.ms/api/chip",
-          query: {'page': page.toString()});
+      final response = await _http
+          .get("$_baseUrl$_chipEndpoint", query: {'page': page.toString()});
       if (response.statusCode == 200) {
         final data = response.body;
         print(response.body);
@@ -190,16 +205,6 @@ class DataKambingController extends GetxController {
 
   void updateSelectedDate(DateTime? date) {
     selectedDate.value = date;
-  }
-
-  @override
-  void onInit() {
-    namaDombaController = TextEditingController();
-    chipIdController = TextEditingController();
-    tanggalLahirController = TextEditingController();
-    fetchDataTable(currentPage);
-    fetchChipId();
-    super.onInit();
   }
 
   @override

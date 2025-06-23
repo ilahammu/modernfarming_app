@@ -1,55 +1,42 @@
-// import 'package:get/get.dart';
-// import 'package:monitoring_kambing/app/data/datatable_model.dart';
+import 'package:get/get.dart';
+import 'package:video_player/video_player.dart';
+import 'package:chewie/chewie.dart';
 
-// class CameraController extends GetxController {
-//   int currentPage = 1;
-//   int totalPage = 1;
-//   final GetConnect _http = GetConnect();
+class CameraController extends GetxController {
+  static const String _videoUrl =
+      'https://gn99lq68-5000.asse.devtunnels.ms/video';
 
-//   final listColumnDataTable = [
-//     'CHIP-ID',
-//     'Nama Domba',
-//     'Jenis Kelamin',
-//     'Panjang',
-//     'Tinggi',
-//     'Created At',
-//     'Updated At',
-//   ].obs;
+  late VideoPlayerController videoPlayerController;
+  ChewieController? chewieController;
+  final isLoading = true.obs;
 
-//   final listDataTable = <DataTableModel>[].obs;
+  @override
+  void onInit() {
+    super.onInit();
+    _initializePlayer();
+  }
 
-//   void fetchDataTable(int page) async {
-//     try {
-//       final response = await _http.get("http://localhost:3000/api/kamera",
-//           query: {'page': page.toString()});
-//       if (response.statusCode == 200) {
-//         final data = response.body;
+  Future<void> _initializePlayer() async {
+    try {
+      videoPlayerController =
+          VideoPlayerController.networkUrl(Uri.parse(_videoUrl));
+      await videoPlayerController.initialize();
+      chewieController = ChewieController(
+        videoPlayerController: videoPlayerController,
+        autoPlay: true,
+        isLive: true,
+      );
+      isLoading.value = false;
+    } catch (error) {
+      // Snackbar removed as requested
+      isLoading.value = false;
+    }
+  }
 
-//         listDataTable.clear();
-//         for (var item in data['data']['rows']) {
-//           listDataTable.add(DataTableModel({
-//             'CHIP-ID': item['chip_id'],
-//             'Nama Domba': item['nama_domba'],
-//             'Jenis Kelamin': item['jenis_kelamin'],
-//             'Panjang': item['panjang'].toString(),
-//             'Tinggi': item['tinggi'].toString(),
-//             'Created At': item['createdAt'],
-//             'Updated At': item['updatedAt'],
-//           }));
-//         }
-//         currentPage = page;
-//         totalPage = data['pagination']['totalPage'];
-//       } else {
-//         throw Exception(" Failed to fetch Data");
-//       }
-//     } catch (e) {
-//       throw Exception(" Failed to calling Data");
-//     }
-//   }
-
-//   @override
-//   void onInit() {
-//     fetchDataTable(currentPage);
-//     super.onInit();
-//   }
-// }
+  @override
+  void onClose() {
+    videoPlayerController.dispose();
+    chewieController?.dispose();
+    super.onClose();
+  }
+}

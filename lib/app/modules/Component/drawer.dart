@@ -105,15 +105,23 @@ class MyDrawer extends GetView<HomeController> {
                   },
                   isSelected: controller.selectedIndex.value == 4,
                 ),
+                CustomListTile(
+                  title: 'Camera',
+                  iconLeading: MdiIcons.rotateOrbit,
+                  onClick: () {
+                    controller.changeIndex(5);
+                  },
+                  isSelected: controller.selectedIndex.value == 5,
+                ),
               ],
             ),
             CustomListTile(
               title: 'Tambah Data Domba',
               iconLeading: MdiIcons.sheep,
               onClick: () {
-                controller.changeIndex(5);
+                controller.changeIndex(6);
               },
-              isSelected: controller.selectedIndex.value == 5,
+              isSelected: controller.selectedIndex.value == 6,
             ),
             CustomExpansionTile(
               title: 'Information',
@@ -127,17 +135,17 @@ class MyDrawer extends GetView<HomeController> {
                   title: 'Team',
                   iconLeading: MdiIcons.accountGroup,
                   onClick: () {
-                    controller.changeIndex(6);
+                    controller.changeIndex(7);
                   },
-                  isSelected: controller.selectedIndex.value == 6,
+                  isSelected: controller.selectedIndex.value == 7,
                 ),
                 CustomListTile(
                   title: 'Sensor',
                   iconLeading: MdiIcons.sack,
                   onClick: () {
-                    controller.changeIndex(7);
+                    controller.changeIndex(8);
                   },
-                  isSelected: controller.selectedIndex.value == 7,
+                  isSelected: controller.selectedIndex.value == 8,
                 ),
               ],
             ),

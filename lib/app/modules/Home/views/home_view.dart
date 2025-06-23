@@ -6,12 +6,12 @@ import 'package:monitoring_kambing/app/modules/Sensors/views/aht_view.dart';
 import 'package:monitoring_kambing/app/modules/Sensors/views/gyro_view.dart';
 import 'package:monitoring_kambing/app/modules/Information/views/sensor_view.dart';
 import 'package:monitoring_kambing/app/modules/Information/views/team_view.dart';
-// import 'package:monitoring_kambing/app/modules/camera/views/camera_view.dart';
 import 'package:monitoring_kambing/app/modules/component/drawer.dart';
 import 'package:monitoring_kambing/app/modules/Sensors/views/loadcell_view.dart';
 import 'package:monitoring_kambing/app/modules/Overview/views/overview_view.dart';
 import 'package:monitoring_kambing/app/modules/Sensors/views/Pakan_view.dart';
 
+import '../../Sensors/views/camera_view.dart';
 import '../controllers/home_controller.dart';
 
 class HomeView extends GetView<HomeController> {
@@ -47,13 +47,13 @@ class HomeView extends GetView<HomeController> {
                           return GyroView();
                         case 4:
                           return IndeksLingkunganView();
-                        // case 5:
-                        //   return CameraView();
                         case 5:
-                          return DataKambingView();
+                          return CameraView();
                         case 6:
-                          return TeamView();
+                          return DataKambingView();
                         case 7:
+                          return TeamView();
+                        case 8:
                           return SensorView();
                         default:
                           return OverviewView();

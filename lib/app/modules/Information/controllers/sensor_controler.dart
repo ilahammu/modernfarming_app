@@ -25,7 +25,7 @@ class SensorController extends GetxController {
             'Sensor load cell adalah perangkat pengukur yang digunakan untuk mendeteksi gaya atau berat suatu objek. Sensor ini bekerja berdasarkan prinsip *deformasi elastis* pada material yang terjadi saat beban diterapkan. Load cell biasanya dilengkapi dengan *strain gauge*, yang mengukur perubahan resistansi akibat perubahan bentuk. Perubahan resistansi ini kemudian diubah menjadi sinyal listrik yang dapat dibaca sebagai berat atau gaya. Penggunaan load cell membutuhkan *amplifier* atau *modul penguat* untuk memperkuat sinyal yang lemah sebelum diproses lebih lanjut oleh sistem pengukuran, seperti mikrokontroler atau komputer.'
       },
       {
-        'imageUrl': 'assets/images/sensor/loadcellPakan.png',
+        'imageUrl': 'assets/images/sensor/loadcellpakan.png',
         'nama_sensor': 'Loadcell Pakan',
         'penjelasan':
             'Load cell adalah perangkat yang mengukur berat atau tekanan dengan mengubah tekanan yang diterima menjadi sinyal yang dapat diukur. Load cell memiliki dua jenis output, yaitu analog dan digital, yang memudahkan pembacaan dan pengolahan data di perangkat seperti komputer atau mikrokontroler. Alat ini sangat sensitif dan dapat merespons perubahan berat dengan sangat cepat, membuatnya ideal untuk digunakan dalam berbagai aplikasi.'

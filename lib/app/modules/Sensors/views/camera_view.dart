@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:get/get.dart';
-import 'package:chewie/chewie.dart';
 import '../controllers/camera_controller.dart' as cam;
 
 class CameraView extends StatelessWidget {
@@ -23,32 +23,46 @@ class CameraView extends StatelessWidget {
         backgroundColor: const Color.fromARGB(255, 78, 79, 79),
       ),
       body: Center(
-        child: Obx(() {
-          if (controller.isLoading.value) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (controller.chewieController != null &&
-              controller.chewieController!.videoPlayerController.value
-                  .isInitialized) {
-            return AspectRatio(
-              aspectRatio: controller.videoPlayerController.value.aspectRatio,
-              child: Chewie(
-                controller: controller.chewieController!,
-              ),
-            );
-          } else {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, color: Colors.red, size: 48),
-                  SizedBox(height: 8),
-                  Text("Gagal memuat video stream."),
-                ],
-              ),
-            );
-          }
-        }),
+        child: Container(
+          width: 1080,
+          height: 720,
+          decoration: BoxDecoration(
+            color: Colors.black,
+            border: Border.all(color: Colors.blueAccent, width: 3),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Obx(() {
+            if (controller.isLoading.value) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (controller.isInitialized.value) {
+              return ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: VlcPlayer(
+                  controller: controller.vlcController,
+                  aspectRatio: 4 / 3,
+                  placeholder: const Center(child: CircularProgressIndicator()),
+                ),
+              );
+            } else {
+              return const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, color: Colors.red, size: 48),
+                    SizedBox(height: 8),
+                    Text("Gagal memuat video stream.",
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 255, 255, 255),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        )),
+                  ],
+                ),
+              );
+            }
+          }),
+        ),
       ),
     );
   }

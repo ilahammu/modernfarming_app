@@ -52,7 +52,7 @@ class CameraController extends GetxController {
 
     // ================== TIMEOUT MANUAL ==================
     // Setelah 15 detik, jika masih loading, anggap saja gagal.
-    Future.delayed(const Duration(seconds: 30), () {
+    Future.delayed(const Duration(seconds: 2), () {
       if (isLoading.value && !_isDisposed) {
         print(
             ">>> TIMEOUT: Video tidak dimulai setelah 2 detik. Membatalkan loading.");
